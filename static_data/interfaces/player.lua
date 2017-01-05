@@ -31,6 +31,10 @@ function player.update(dt)
   --TODO: Update everything.
 end
 
-local function player.setPos(x,y)
+function player.draw()
  --TODO: what
+end
+
+function playerUpdate(dt)
+  player.update(dt)
 end
