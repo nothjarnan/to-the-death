@@ -1,5 +1,5 @@
 
-local player = {}
+player = {}
 
 function player.load(playerNumber)
   playerNumber = nil --> Completely unimportant number, dunno why it's there when I'm doing object oriented programming. What the hell.
@@ -10,8 +10,13 @@ function player.load(playerNumber)
   player.xvel = 0 --> Player object's velocity in each direction
   player.yvel = 0 -->
 
-  player.width = 5 -- >
-  player.height = 7 -- > Not sure if these will be useless in a bit.
+  player.width = 5 -->
+  player.height = 7 --> Not sure if these will be useless in a bit.
+  player.textureIdle = {
+    
+  }
+  player.runTexture = {}
+  player.attackTexture = {}
 end
 
 function player.hitReg(dt)
