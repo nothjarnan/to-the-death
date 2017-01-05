@@ -1,27 +1,36 @@
 
-local health = 100
-local weapons = {
-  "fists",
-  "sword",
-}
-function hitReg(dt)
+local player = {}
+
+function player.load(playerNumber)
+  player.x = 0 -->
+  player.y = 0 --> Literal X and Y coordinates for player.
+  player.friction = 8.2 --> Air resistance/friction, used for calculating slowing down.
+  player.speed = 1981.3 --> .. Top speed.
+  player.xvel = 0 --> Player object's velocity in each direction
+  player.yvel = 0 -->
+
+  player.width = 5 -- >
+  player.height = 7 -- > Not sure if these will be useless in a bit.
+end
+
+function player.hitReg(dt)
+  --TODO: Figure out an efficient way to code the player hitreg
+end
+
+function player.movement(dt)
+  --TODO: Movement being very smooth. Like. Very, very smooth.
 
 end
 
-function movement(dt)
-
-
-end
-
-function physics(dt)
-
+function player.physics(dt)
+  --TODO: Physics might be a good idea. It's not space is it? It is? What.
 
 end
 
-function update(dt)
-
+function player.update(dt)
+  --TODO: Update everything.
 end
 
-local function setPos(x,y)
-
+local function player.setPos(x,y)
+ --TODO: what
 end
