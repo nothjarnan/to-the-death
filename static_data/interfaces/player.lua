@@ -2,6 +2,7 @@
 local player = {}
 
 function player.load(playerNumber)
+  playerNumber = nil --> Completely unimportant number, dunno why it's there when I'm doing object oriented programming. What the hell.
   player.x = 0 -->
   player.y = 0 --> Literal X and Y coordinates for player.
   player.friction = 8.2 --> Air resistance/friction, used for calculating slowing down.
