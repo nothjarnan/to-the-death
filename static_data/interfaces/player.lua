@@ -1,12 +1,30 @@
 
 player = {}
-
+groundLevel = 458
+gravity = (35*100)
+scaleFactor = 5
+timer = 1
 function player.load(playerNumber)
+  player_idle_fists = {
+    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png")
+  }
+  print("Loaded idle sprites for weapon: fists")
+  player_run_fists = {
+    love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_1.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_2.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_3.png"),
+  }
+  print("Loaded running sprites for weapon: fists")
+  player_attack_fists = {
+    love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists.png")
+  }
+  print("Loaded attack sprites for weapon: fists")
+  print("Finished loading.")
   --spritebatch = love.graphics.newSpriteBatch(love.graphics.newImage("static_data/textures/playerSprites/spriteAtlas.png"),20,"dynamic")
   playerNumber = nil --> Completely unimportant number, dunno why it's there when I'm doing object oriented programming. What the hell.
   player.x = 0 -->
   player.y = 0 --> Literal X and Y coordinates for player.
-  player.friction = 8.2 --> Air resistance/friction, used for calculating slowing down.
+  player.friction = 13 --> Air resistance/friction, used for calculating slowing down.
   player.speed = 1981.3 --> .. Top speed.
   player.xvel = 0 --> Player object's velocity in each direction
   player.yvel = 0 -->
@@ -14,9 +32,14 @@ function player.load(playerNumber)
   player.width = 5 -->
   player.height = 7 --> Not sure if these will be useless in a bit.
   player.textureIdle = {} --> TODO: Load textures for every weapon. (animation)
-  player.playerHolderTex = love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png")
+  player.totalJumps = 0
+  player.textureIdle = love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png")
+  player.currentTexture = player.textureIdle
   player.runTexture = {}
   player.attackTexture = {}
+
+  --> Weapon stuff.
+  player.weapon = "fists"
 end
 
 function player.hitReg(dt)
@@ -28,32 +51,79 @@ function player.movement(dt)
   if love.keyboard.isDown("d") and player.xvel <  player.speed then
     player.xvel = player.xvel + player.speed * dt
   end
-  if love.keyboard.isDown("a") and player.xvel <  player.speed then
+  if love.keyboard.isDown("a") and player.xvel >  -player.speed then
     player.xvel = player.xvel - player.speed * dt
   end
   if love.keyboard.isDown("w") and player.xvel <  player.speed then
-    player.yvel = player.yvel + player.speed * dt
+    if (player.y + player.height) >= groundLevel-10 then
+      player.yvel = -650
+    elseif player.totalJumps == 0 then
+      player.totalJumps = 1
+    end
   end
 
 end
-
+function player.animate(dt) --> I'm not even sure how the hell this even works properly, but it works. So I'll keep it.
+  timer = timer + 3 * dt    --> Whackjob, right? Riiiight? ..no?
+  timer_floored = math.floor(timer)
+  if timer_floored == 3 and timer > 3.9 then
+    timer = 1
+  end
+  print(timer,timer_floored,player.currentTexture)
+  if not love.keyboard.isDown("w","a","d") then
+    if player.weapon == "fists" then
+      player.currentTexture = player_idle_fists[1]
+    end
+  end
+  if love.keyboard.isDown("a") then
+    if player.weapon == "fists" then
+      scaleFactor = -5
+      player.currentTexture = player_run_fists[timer_floored]
+    end
+  end
+  if love.keyboard.isDown("d") then
+    if player.weapon == "fists" then
+      scaleFactor = 5
+      player.currentTexture = player_run_fists[timer_floored]
+    end
+  end
+end
+function player.reset()
+  player.load()
+end
 function player.physics(dt)
   --TODO: Physics might be a good idea. It's not space is it? It is? What.
   player.x = player.x + player.xvel * dt
   player.y = player.y + player.yvel * dt
+  player.yvel = player.yvel + gravity * dt
   player.xvel = player.xvel * (1 - math.min(dt*player.friction,1))
 
+end
+function player.bounds()
+  if player.x < -10 then
+    player.x = -10
+  end
+  if player.x > love.graphics.getWidth()+10 then
+    player.x = love.graphics.getWidth()+10
+  end
+  if player.y + player.height > groundLevel then
+    player.y = groundLevel-player.height
+    player.yvel = 0
+    player.totalJumps = 0
+  end
 end
 
 function player.update(dt)
   --TODO: Update everything.
   player.physics(dt)
+  player.bounds()
+  player.animate(dt)
   player.movement(dt)
 end
 
 function player.draw()
  --TODO: what
- love.graphics.draw(player.playerHolderTex,player.x,player.y,0,5,5,0,0)
+ love.graphics.draw(player.currentTexture,player.x,player.y,0,scaleFactor,5,player.currentTexture:getWidth()/2,0)
 end
 
 function playerUpdate(dt)
