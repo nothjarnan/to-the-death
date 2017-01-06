@@ -1,5 +1,11 @@
 
 player = {}
+opponent = {
+  width = 0,
+  height = 0,
+  x = 0,
+  y = 0
+}
 groundLevel = 458
 gravity = (35*100)
 scaleFactor = 5
@@ -22,14 +28,14 @@ function player.load(playerNumber)
   print("Finished loading.")
   --spritebatch = love.graphics.newSpriteBatch(love.graphics.newImage("static_data/textures/playerSprites/spriteAtlas.png"),20,"dynamic")
   playerNumber = nil --> Completely unimportant number, dunno why it's there when I'm doing object oriented programming. What the hell.
-  player.x = 0 -->
-  player.y = 0 --> Literal X and Y coordinates for player.
+  player.x = 150 -->
+  player.y = 430 --> Literal X and Y coordinates for player.
   player.friction = 13 --> Air resistance/friction, used for calculating slowing down.
-  player.speed = 1981.3 --> .. Top speed.
+  player.speed = 2000 --> .. Top speed.
   player.xvel = 0 --> Player object's velocity in each direction
   player.yvel = 0 -->
 
-  player.width = 5 -->
+  player.width = 35 -->
   player.height = 7 --> Not sure if these will be useless in a bit.
   player.textureIdle = {} --> TODO: Load textures for every weapon. (animation)
   player.totalJumps = 0
@@ -69,7 +75,7 @@ function player.animate(dt) --> I'm not even sure how the hell this even works p
   if timer_floored == 3 and timer > 3.9 then
     timer = 1
   end
-  print(timer,timer_floored,player.currentTexture)
+  --print(timer,timer_floored,player.currentTexture)
   if not love.keyboard.isDown("w","a","d") then
     if player.weapon == "fists" then
       player.currentTexture = player_idle_fists[1]
@@ -99,7 +105,17 @@ function player.physics(dt)
   player.xvel = player.xvel * (1 - math.min(dt*player.friction,1))
 
 end
+function player.setOpponentPosition(x,y,w,h)
+  opponent.x = x
+  opponent.y = y
+  opponent.width = w
+  opponent.height = h
+end
+
 function player.bounds()
+  if player.x >= opponent.x + opponent.width and player.x <= opponent.x + opponent.width then
+    print("Collision!!")
+  end
   if player.x < -10 then
     player.x = -10
   end

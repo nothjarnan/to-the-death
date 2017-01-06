@@ -1,4 +1,5 @@
 require "static_data/interfaces/player" --> Apparently interfaces cannot be outside of root directories. What the hell?
+require "static_data/interfaces/player2"
 --> It doesn't work, still. Wtf
 version = "v0.0.1 ALPHA"
 function love.load()
@@ -19,6 +20,7 @@ function love.load()
   fadeout = false
   showStats = false
   player.load()
+  playertwo.load()
 end
 function love.keypressed(k)
   if k == "f3" then
@@ -29,6 +31,7 @@ function love.update(dt)
 
   if love.keyboard.isDown("escape") then
     player.reset()
+    playertwo.reset()
     gameState = "main_menu"
   end
   if gameState == "main_menu" then
@@ -61,7 +64,9 @@ function love.update(dt)
       gameState = "game"
     end
   else
-    playerUpdate(dt)
+    player.update(dt)
+    playertwo.update(dt)
+    player.setOpponentPosition(playertwo.x, playertwo.y, playertwo.width, playertwo.height)
   end
 end
 
@@ -87,10 +92,11 @@ function love.draw()
     love.graphics.draw(levelbackgrounds[level],love.graphics.getWidth()/2,love.graphics.getHeight()/2,0,4.8,4.8,levelbackgrounds[level]:getWidth()/2,levelbackgrounds[level]:getHeight()/2)
     love.graphics.print("To the Death | "..version,1,love.graphics.getHeight()-12)
     player.draw()
+    playertwo.draw()
   end
   if showStats == true then
     local stats = love.graphics.getStats()
     love.graphics.setColor(0,180,0,255)
-    love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024).."KB",1,1)
+    love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024).."KB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y,1,1)
   end
 end
