@@ -1,4 +1,10 @@
 playertwo = {}
+opponentt={
+  width = 0,
+  height = 0,
+  x = 0,
+  y = 0
+}
 groundLeveltwo = 458
 gravitytwo = (35*100)
 scaleFactortwo = 5
@@ -37,6 +43,7 @@ function playertwo.load(playerNumber)
   playertwo.runTexture = {}
   playertwo.attackTexture = {}
 
+  playertwo.collided = false
   --> Weapon stuff.
   playertwo.weapon = "fists"
 end
@@ -98,7 +105,22 @@ function playertwo.physics(dt)
   playertwo.xvel = playertwo.xvel * (1 - math.min(dt*playertwo.friction,1))
 
 end
+function playertwo.setOpponentPosition(x,y,w,h)
+  opponentt.x = x
+  opponentt.y = y
+  opponentt.width = w
+  opponentt.height = h
+end
 function playertwo.bounds()
+  if playertwo.x >= opponentt.x-50 and playertwo.x <= opponentt.x+50 then
+    if playertwo.x < opponentt.x then
+      playertwo.x = opponentt.x-50
+    else
+      playertwo.x = opponentt.x+50
+    end
+  else
+    player.collided = false
+  end
   if playertwo.x < -10 then
     playertwo.x = -10
   end

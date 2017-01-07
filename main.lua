@@ -66,7 +66,8 @@ function love.update(dt)
   else
     player.update(dt)
     playertwo.update(dt)
-    player.setOpponentPosition(playertwo.x, playertwo.y, playertwo.width, playertwo.height)
+    player.setOpponentPosition(playertwo.x, playertwo.y, playertwo.currentTexture:getWidth(), playertwo.height)
+    playertwo.setOpponentPosition(player.x,player.y,player.currentTexture:getWidth(),player.height)
   end
 end
 
@@ -91,12 +92,22 @@ function love.draw()
     love.graphics.setColor(255,255,255,255)
     love.graphics.draw(levelbackgrounds[level],love.graphics.getWidth()/2,love.graphics.getHeight()/2,0,4.8,4.8,levelbackgrounds[level]:getWidth()/2,levelbackgrounds[level]:getHeight()/2)
     love.graphics.print("To the Death | "..version,1,love.graphics.getHeight()-12)
+    if showStats == true then
+      love.graphics.setColor(255,0,0,255)
+      love.graphics.rectangle("line",player.x-25,player.y,50,player.currentTexture:getHeight()*5)
+      love.graphics.print("PLAYER1: COLLIDERSTARTXY:("..(player.x-25).."x"..(player.x+50).."y)",1,150)
+      love.graphics.line(1,168,player.x,player.y)
+      love.graphics.rectangle("line",playertwo.x-25,playertwo.y,50,playertwo.currentTexture:getHeight()*5)
+      love.graphics.print("PLAYER2: COLLIDERSTARTXY:("..(playertwo.x-25).."x"..(playertwo.x+50).."y)",1,180)
+      love.graphics.line(1,180,playertwo.x,playertwo.y)
+      love.graphics.setColor(255,255,255,255)
+    end
     player.draw()
     playertwo.draw()
   end
   if showStats == true then
     local stats = love.graphics.getStats()
-    love.graphics.setColor(0,180,0,255)
-    love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024).."KB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y,1,1)
+    love.graphics.setColor(255,0,0,255)
+    love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024).."KB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y.."\n PLAYER1COLL: "..tostring(player.collided).."\n PLAYER2COLL: "..tostring(playertwo.collided).."\n T: "..timer.."\n T2: "..timertwo,1,1)
   end
 end

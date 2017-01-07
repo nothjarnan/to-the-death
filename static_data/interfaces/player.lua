@@ -44,6 +44,8 @@ function player.load(playerNumber)
   player.runTexture = {}
   player.attackTexture = {}
 
+  --> Physics (temp)
+  player.collided = false
   --> Weapon stuff.
   player.weapon = "fists"
 end
@@ -62,7 +64,7 @@ function player.movement(dt)
   end
   if love.keyboard.isDown("w") and player.xvel <  player.speed then
     if (player.y + player.height) >= groundLevel-10 then
-      player.yvel = -650
+      player.yvel = -820
     elseif player.totalJumps == 0 then
       player.totalJumps = 1
     end
@@ -93,6 +95,11 @@ function player.animate(dt) --> I'm not even sure how the hell this even works p
       player.currentTexture = player_run_fists[timer_floored]
     end
   end
+  if love.keyboard.isDown("rightShift") then
+    if player.weapon == "fists" then
+      player.currentTexture = player_attack_fists[1]
+    end
+  end
 end
 function player.reset()
   player.load()
@@ -113,9 +120,21 @@ function player.setOpponentPosition(x,y,w,h)
 end
 
 function player.bounds()
-  if player.x >= opponent.x + opponent.width and player.x <= opponent.x + opponent.width then
-    print("Collision!!")
+  if player.y >= opponent.y then
+    -- uh idk? don't ask me wtf.
+  else
+    if player.x >= opponent.x-50 and player.x <= opponent.x+50 then
+      if player.x < opponent.x then
+        player.x = opponent.x-50
+      else
+        player.x = opponent.x+50
+      end
+    else
+      player.collided = false
+    end
   end
+
+
   if player.x < -10 then
     player.x = -10
   end
