@@ -13,22 +13,22 @@ function playertwo.load(playerNumber)
   playertwo_idle_fists = {
     love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png")
   }
-  print("Loaded idle sprites for weapon: fists")
+  cPrint("Loaded idle sprites for weapon: fists","player2.lua")
   playertwo_run_fists = {
     love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_1.png"),
     love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_2.png"),
     love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_3.png"),
   }
-  print("Loaded running sprites for weapon: fists")
+  cPrint("Loaded running sprites for weapon: fists","player2.lua")
   playertwo_attack_fists = {
     love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists.png")
   }
-  print("Loaded attack sprites for weapon: fists")
-  print("Finished loading.")
+  cPrint("Loaded attack sprites for weapon: fists","player2.lua")
+  cPrint("Finished loading.","player2.lua")
   --spritebatch = love.graphics.newSpriteBatch(love.graphics.newImage("static_data/textures/playerSprites/spriteAtlas.png"),20,"dynamic")
   playerNumber = nil --> Completely unimportant number, dunno why it's there when I'm doing object oriented programming. What the hell.
   playertwo.x = love.graphics.getWidth()-150 -->
-  playertwo.y = 430 --> Literal X and Y coordinates for player.
+  playertwo.y = 330 --> Literal X and Y coordinates for player.
   playertwo.friction = 13 --> Air resistance/friction, used for calculating slowing down.
   playertwo.speed = 2000 --> .. Top speed.
   playertwo.xvel = 0 --> Player object's velocity in each direction
@@ -45,7 +45,9 @@ function playertwo.load(playerNumber)
 
   playertwo.collided = false
   --> Weapon stuff.
+  playertwo.health = 100
   playertwo.weapon = "fists"
+  playertwo.god = false
 end
 
 function playertwo.hitReg(dt)
@@ -62,7 +64,7 @@ function playertwo.movement(dt)
   end
   if love.keyboard.isDown("up") and playertwo.xvel <  playertwo.speed then
     if (playertwo.y + playertwo.height) >= groundLeveltwo-10 then
-      playertwo.yvel = -650
+      playertwo.yvel = -820
     elseif playertwo.totalJumps == 0 then
       playertwo.totalJumps = 1
     end
@@ -76,7 +78,7 @@ function playertwo.animate(dt) --> I'm not even sure how the hell this even work
     timertwo = 1
   end
   --print(timertwo,timertwo_floored,playertwo.currentTexture)
-  if not love.keyboard.isDown("left","up","right") then
+  if not love.keyboard.isDown("left","up","right","rshift") then
     if playertwo.weapon == "fists" then
       playertwo.currentTexture = playertwo_idle_fists[1]
     end
@@ -84,18 +86,38 @@ function playertwo.animate(dt) --> I'm not even sure how the hell this even work
   if love.keyboard.isDown("left") then
     if player.weapon == "fists" then
       scaleFactortwo = -5
-      playertwo.currentTexture = playertwo_run_fists[timer_floored]
+      playertwo.currentTexture = playertwo_run_fists[timertwo_floored]
     end
   end
   if love.keyboard.isDown("right") then
     if playertwo.weapon == "fists" then
       scaleFactortwo = 5
-      playertwo.currentTexture = playertwo_run_fists[timer_floored]
+      playertwo.currentTexture = playertwo_run_fists[timertwo_floored]
+    end
+  end
+  if love.keyboard.isDown("rshift") and timertwo_floored < 3 then
+    if playertwo.weapon == "fists" then
+      playertwo.currentTexture = playertwo_attack_fists[1]
+      if playertwo.collided == true then
+        cPrint("HIYA!","player2.lua")
+        player.sendDamage(10)
+      end
     end
   end
 end
 function playertwo.reset()
   playertwo.load()
+end
+function playertwo.sendDamage(damage)
+  local dmg = damage
+  if playertwo.god == false then
+    cPrint("Player2: "..damage.." taken!","player2.lua")
+    playertwo.health = playertwo.health +-dmg
+  else
+    cPrint("I am god. You cannot hurt me.","player2.lua")
+  end
+  cPrint("Remaining health: "..playertwo.health.."/100","player2.lua")
+  cPrint("Opponent health: "..player.health.."/100","player2.lua")
 end
 function playertwo.physics(dt)
   --TODO: Physics might be a good idea. It's not space is it? It is? What.
@@ -113,14 +135,11 @@ function playertwo.setOpponentPosition(x,y,w,h)
 end
 function playertwo.bounds()
   if playertwo.x >= opponentt.x-50 and playertwo.x <= opponentt.x+50 then
-    if playertwo.x < opponentt.x then
-      playertwo.x = opponentt.x-50
-    else
-      playertwo.x = opponentt.x+50
-    end
+    playertwo.collided = true
   else
-    player.collided = false
+    playertwo.collided=false
   end
+
   if playertwo.x < -10 then
     playertwo.x = -10
   end
@@ -136,17 +155,35 @@ end
 
 function playertwo.update(dt)
   --TODO: Update everything.
-  playertwo.physics(dt)
-  playertwo.bounds()
-  playertwo.animate(dt)
-  playertwo.movement(dt)
+  if focused == true then
+    if playertwo.health >= 0 then
+      playertwo.physics(dt)
+      playertwo.bounds()
+      playertwo.animate(dt)
+      if spCMD == false then
+        playertwo.movement(dt)
+      end
+    end --my suffering
+  end
 end
 
 function playertwo.draw()
  --TODO: what
- love.graphics.setColor(100,255,100,255)
- love.graphics.draw(playertwo.currentTexture,playertwo.x,playertwo.y,0,scaleFactortwo,5,playertwo.currentTexture:getWidth()/2,0)
- love.graphics.setColor(255,255,255,255)
+ if playertwo.health >= 0 then
+   if nightMode == true then
+     love.graphics.setColor(50,127.5,50,255)
+   else
+     love.graphics.setColor(100,255,100,255)
+   end
+
+   love.graphics.draw(playertwo.currentTexture,playertwo.x,playertwo.y,0,scaleFactortwo,5,playertwo.currentTexture:getWidth()/2,0)
+   love.graphics.setColor(255,255,255,255)
+ else
+   if gameState ~= "main_menu" then
+     gameState = "player_1_wins"
+   end
+ end
+
 end
 
 function playerUpdate(dt)

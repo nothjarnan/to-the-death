@@ -14,18 +14,18 @@ function player.load(playerNumber)
   player_idle_fists = {
     love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png")
   }
-  print("Loaded idle sprites for weapon: fists")
+  cPrint("Loaded idle sprites for weapon: fists","player1.lua")
   player_run_fists = {
     love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_1.png"),
     love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_2.png"),
     love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_3.png"),
   }
-  print("Loaded running sprites for weapon: fists")
+  cPrint("Loaded running sprites for weapon: fists","player1.lua")
   player_attack_fists = {
     love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists.png")
   }
-  print("Loaded attack sprites for weapon: fists")
-  print("Finished loading.")
+  cPrint("Loaded attack sprites for weapon: fists","player1.lua")
+  cPrint("Finished loading.","player1.lua")
   --spritebatch = love.graphics.newSpriteBatch(love.graphics.newImage("static_data/textures/playerSprites/spriteAtlas.png"),20,"dynamic")
   playerNumber = nil --> Completely unimportant number, dunno why it's there when I'm doing object oriented programming. What the hell.
   player.x = 150 -->
@@ -48,6 +48,8 @@ function player.load(playerNumber)
   player.collided = false
   --> Weapon stuff.
   player.weapon = "fists"
+  player.health = 100
+  player.god = false
 end
 
 function player.hitReg(dt)
@@ -77,8 +79,8 @@ function player.animate(dt) --> I'm not even sure how the hell this even works p
   if timer_floored == 3 and timer > 3.9 then
     timer = 1
   end
-  --print(timer,timer_floored,player.currentTexture)
-  if not love.keyboard.isDown("w","a","d") then
+  --cPrint(timer,timer_floored,player.currentTexture)
+  if not love.keyboard.isDown("w","a","d","lshift") then
     if player.weapon == "fists" then
       player.currentTexture = player_idle_fists[1]
     end
@@ -95,14 +97,30 @@ function player.animate(dt) --> I'm not even sure how the hell this even works p
       player.currentTexture = player_run_fists[timer_floored]
     end
   end
-  if love.keyboard.isDown("rightShift") then
+  if love.keyboard.isDown("lshift") and timer_floored < 3 then
     if player.weapon == "fists" then
       player.currentTexture = player_attack_fists[1]
+      if player.collided == true then
+        cPrint("HIYA!","player1.lua")
+        playertwo.sendDamage(10)
+      end
     end
   end
 end
 function player.reset()
   player.load()
+end
+function player.sendDamage(damage)
+  local dmg = damage
+
+  if player.god == false then
+    cPrint("Player1: "..damage.." taken!","player1.lua")
+    player.health = player.health +-dmg
+  else
+    cPrint("I am god! Opponent cannot damage me.","player1.lua")
+  end
+  cPrint("Remaining health: "..player.health.."/100","player1.lua")
+  cPrint("Opponent health: "..playertwo.health.."/100","player1.lua")
 end
 function player.physics(dt)
   --TODO: Physics might be a good idea. It's not space is it? It is? What.
@@ -118,22 +136,13 @@ function player.setOpponentPosition(x,y,w,h)
   opponent.width = w
   opponent.height = h
 end
-
+ab = false
 function player.bounds()
-  if player.y >= opponent.y then
-    -- uh idk? don't ask me wtf.
+  if player.x >= opponent.x-50 and player.x <= opponent.x+50 then
+    player.collided = true
   else
-    if player.x >= opponent.x-50 and player.x <= opponent.x+50 then
-      if player.x < opponent.x then
-        player.x = opponent.x-50
-      else
-        player.x = opponent.x+50
-      end
-    else
-      player.collided = false
-    end
+    player.collided=false
   end
-
 
   if player.x < -10 then
     player.x = -10
@@ -150,15 +159,27 @@ end
 
 function player.update(dt)
   --TODO: Update everything.
-  player.physics(dt)
-  player.bounds()
-  player.animate(dt)
-  player.movement(dt)
+  if focused == true then
+    if player.health >= 0 then
+      player.physics(dt)
+      player.bounds()
+      player.animate(dt)
+      if spCMD == false then
+        player.movement(dt)
+      end
+    end
+  end
 end
 
 function player.draw()
  --TODO: what
- love.graphics.draw(player.currentTexture,player.x,player.y,0,scaleFactor,5,player.currentTexture:getWidth()/2,0)
+ if player.health >= 0 then
+   love.graphics.draw(player.currentTexture,player.x,player.y,0,scaleFactor,5,player.currentTexture:getWidth()/2,0)
+ else
+   if gameState ~= "main_menu" then
+     gameState = "player_2_wins"
+   end
+ end
 end
 
 function playerUpdate(dt)
