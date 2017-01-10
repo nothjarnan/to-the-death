@@ -10,6 +10,9 @@ gravitytwo = (35*100)
 scaleFactortwo = 5
 timertwo = 2
 function playertwo.load(playerNumber)
+  playercol = {
+    love.math.random(90,255), love.math.random(110,255) , love.math.random(90,255)
+  }
   playertwo_idle_fists = {
     love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png")
   }
@@ -21,7 +24,9 @@ function playertwo.load(playerNumber)
   }
   cPrint("Loaded running sprites for weapon: fists","player2.lua")
   playertwo_attack_fists = {
-    love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists.png")
+    love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists2.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists.png"), -- Load attack spriteset, which is kinda sucky.
+    love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists3.png"),
   }
   cPrint("Loaded attack sprites for weapon: fists","player2.lua")
   cPrint("Finished loading.","player2.lua")
@@ -42,12 +47,23 @@ function playertwo.load(playerNumber)
   playertwo.currentTexture = player.textureIdle
   playertwo.runTexture = {}
   playertwo.attackTexture = {}
-
+  playertwo.canAttack = true
   playertwo.collided = false
+  playertwo.inGround = true
   --> Weapon stuff.
   playertwo.health = 100
   playertwo.weapon = "fists"
   playertwo.god = false
+  playertwo.parts = {
+    love.graphics.newImage("static_data/textures/playerSprites/parts/player_arm.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/parts/player_body.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/parts/player_head.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/parts/player_legs.png"),
+  }
+  for i=4, 1500 do
+    --cPrint(i,"DEBUG")
+    playertwo.parts[i] = love.graphics.newImage("static_data/textures/playerSprites/parts/bloodspot.png")
+  end
 end
 
 function playertwo.hitReg(dt)
@@ -77,6 +93,9 @@ function playertwo.animate(dt) --> I'm not even sure how the hell this even work
   if timertwo_floored == 3 and timertwo > 3.9 then
     timertwo = 1
   end
+  if timertwo_floored == 1 or timertwo_floored == 3 then
+    playertwo.canAttack = true
+  end
   --print(timertwo,timertwo_floored,playertwo.currentTexture)
   if not love.keyboard.isDown("left","up","right","rshift") then
     if playertwo.weapon == "fists" then
@@ -97,10 +116,13 @@ function playertwo.animate(dt) --> I'm not even sure how the hell this even work
   end
   if love.keyboard.isDown("rshift") and timertwo_floored < 3 then
     if playertwo.weapon == "fists" then
-      playertwo.currentTexture = playertwo_attack_fists[1]
+      playertwo.currentTexture = playertwo_attack_fists[timertwo_floored]
       if playertwo.collided == true then
         cPrint("HIYA!","player2.lua")
-        player.sendDamage(10)
+        if timertwo_floored == 2 and playertwo.canAttack then
+          player.sendDamage(10) -- When attack animation 'attacks', send damage to opponent if they've collided with the player-
+          playertwo.canAttack = false
+        end
       end
     end
   end
@@ -109,10 +131,34 @@ function playertwo.reset()
   playertwo.load()
 end
 function playertwo.sendDamage(damage)
+  local rand2 = love.math.random(0,1000)
   local dmg = damage
+  cPrint(rand2,"player2.lua")
+  if opponentt.x < playertwo.x then
+    if rand2 > 3 and rand2 < 7 then
+      playertwo.xvel = 5500
+      playertwo.yvel = -860
+    else
+      playertwo.xvel = 350
+      playertwo.yvel = -350
+    end
+
+  else
+    if rand2 > 3 and rand2 < 7 then
+      playertwo.xvel = -5500
+      playertwo.yvel = -860
+    else
+      playertwo.xvel = -350
+      playertwo.yvel = -350
+    end
+  end
   if playertwo.god == false then
     cPrint("Player2: "..damage.." taken!","player2.lua")
+
     playertwo.health = playertwo.health +-dmg
+    if playertwo.health < 0 then
+      explodePlayer(playertwo.x,playertwo.y,playertwo.parts,dt)
+    end
   else
     cPrint("I am god. You cannot hurt me.","player2.lua")
   end
@@ -125,7 +171,6 @@ function playertwo.physics(dt)
   playertwo.y = playertwo.y + playertwo.yvel * dt
   playertwo.yvel = playertwo.yvel + gravity * dt
   playertwo.xvel = playertwo.xvel * (1 - math.min(dt*playertwo.friction,1))
-
 end
 function playertwo.setOpponentPosition(x,y,w,h)
   opponentt.x = x
@@ -150,6 +195,9 @@ function playertwo.bounds()
     playertwo.y = groundLeveltwo-playertwo.height
     playertwo.yvel = 0
     playertwo.totalJumps = 0
+    playertwo.inGround = true
+  else
+    playertwo.inGround = false
   end
 end
 
@@ -170,17 +218,20 @@ end
 function playertwo.draw()
  --TODO: what
  if playertwo.health >= 0 then
-   if nightMode == true then
-     love.graphics.setColor(50,127.5,50,255)
+   if nightMode == true and gameState ~= "player_2_wins" then
+     love.graphics.setColor(playercol[1]/2,playercol[2]/2,playercol[3]/2,255)
    else
-     love.graphics.setColor(100,255,100,255)
+     love.graphics.setColor(playercol[1],playercol[2],playercol[3],255)
    end
-
+   if rainbow then
+     love.graphics.setColor(HSL(hue2,255,200))
+   end
    love.graphics.draw(playertwo.currentTexture,playertwo.x,playertwo.y,0,scaleFactortwo,5,playertwo.currentTexture:getWidth()/2,0)
    love.graphics.setColor(255,255,255,255)
  else
    if gameState ~= "main_menu" then
      gameState = "player_1_wins"
+     nightMode = true
    end
  end
 

@@ -1,12 +1,25 @@
 require "static_data/interfaces/player" --> Apparently interfaces cannot be outside of root directories. What the hell?
 require "static_data/interfaces/player2"
-
+require "static_data/interfaces/particles"
 local utf8 = require("utf8")
 --> It doesn't work, still. Wtf
-version = "v0.1.4 ALPHA"
+version = "v0.1.5 ALPHA"
 local prefixCMD = "stout"
 local isGJCLIENT = false
-
+function HSL(h, s, l, a)
+	if s<=0 then return l,l,l,a end
+	h, s, l = h/256*6, s/255, l/255
+	local c = (1-math.abs(2*l-1))*s
+	local x = (1-math.abs(h%2-1))*c
+	local m,r,g,b = (l-.5*c), 0,0,0
+	if h < 1     then r,g,b = c,x,0
+	elseif h < 2 then r,g,b = x,c,0
+	elseif h < 3 then r,g,b = 0,c,x
+	elseif h < 4 then r,g,b = 0,x,c
+	elseif h < 5 then r,g,b = x,0,c
+	else              r,g,b = c,0,x
+	end return (r+m)*255,(g+m)*255,(b+m)*255,a
+end
 
 function onConnect(ip,port)
   cPrint("Client "..ip..":"..port.." connected.")
@@ -22,7 +35,11 @@ function clientReceive(data)
 
 end
 function love.load()
+  resolution={
+    love.graphics.getHeight(),love.graphics.getWidth()
+  }
   stats = love.graphics.getStats()
+
   changeLog = {
     "Changelog To the Death "..version..":",
     "- Players no longer collide, since it only causes problems anyway.",
@@ -41,6 +58,7 @@ function love.load()
   --> Commandline settings stuff thingies.
   cheats = false
   excollisions = false
+  rainbow = false
   --> The rest of initialization stuff
   server = false
   knownstate = true
@@ -48,6 +66,7 @@ function love.load()
   printedOnce = false
   inputCMD = ""
   spCMD = false
+
   love.graphics.setDefaultFilter("linear","nearest", 0)
   knownstates = {
     "main_menu",
@@ -81,6 +100,12 @@ function love.load()
   player.load()
   playertwo.load()
   if utf8 then cPrint("Has utf8 support") end
+  cPrint(resolution[2].."x"..resolution[1])
+  if resolution[1] < 1680 and resolution[2] < 1050 then
+    love.graphics.setMode(800,600)
+  end
+  hue = 0
+  hue2 = 130
 end
 function love.textinput(t)
     inputCMD = inputCMD..t
@@ -169,6 +194,15 @@ function love.keypressed(k)
       returnString = {
         "TTD "..version.." Debug Console. Enter 'help' for a list of commands",
       }
+    elseif inputCMD == "rainbows" then
+      if rainbow then
+        returnString[#returnString+1] = "["..prefixCMD.."]: No rainbows :("
+        rainbow = false
+      else
+        returnString[#returnString+1] = "["..prefixCMD.."]: Wooo rainbows!"
+        rainbow = true
+      end
+
     elseif inputCMD == "togglecheats" then
       cheats = not cheats
       if cheats == true then
@@ -209,11 +243,11 @@ function love.keypressed(k)
     elseif string.find(inputCMD,"kill ",1) and cheats == true then
       local ply = string.gsub(inputCMD,"kill ","")
       if ply == "1" then
-        player.health = 0
+        player.health = -99.9*10^5
         returnString[#returnString+1] = "["..prefixCMD.."]: Player1 is now dead."
       end
       if ply == "2" then
-        playertwo.health = 0
+        playertwo.health = -99.9*10^5
         returnString[#returnString+1] = "["..prefixCMD.."]: Player2 is now dead"
       end
     elseif string.find(inputCMD,"healthp",1) and cheats == true then
@@ -250,6 +284,10 @@ function love.keypressed(k)
     inputCMD = ""
   end
   end
+  if k == "f6" and gameState == "game" then
+    player.reset()
+    playertwo.reset()
+  end
   if k == "f3" and love.filesystem.isFused() == false then
     showStats = not showStats
   end
@@ -259,8 +297,12 @@ function love.keypressed(k)
     end
   end
   if k == "escape" then
+    deleteParticles()
     player.reset()
     playertwo.reset()
+    if nightMode == true and gameState == "player_1_wins" or gameState == "player_2_wins" then
+      nightMode = false
+    end
     gameState = "main_menu"
   end
   if k == "f5" then
@@ -274,6 +316,10 @@ function love.keypressed(k)
       level = love.math.random(1,2)
       cPrint("LEVEL:"..level)
       gameState = "game"
+      nightMode = false
+      player.load()
+      playertwo.load()
+      deleteParticles()
     end
   end
 end
@@ -282,6 +328,16 @@ function love.update(dt)
   local nERR = 0
   pl1Cooldown = 10
   pl2Cooldown = 10
+  if hue >= 255 then
+    hue = 0
+  else
+    hue = hue + 150*dt
+  end
+  if hue2 >= 255 then
+    hue2 = 0
+  else
+    hue2 = hue2 + 150*dt
+  end
   if pl1Cooldown <= 0 then
     pl1Cooldown = 0
   else
@@ -342,8 +398,9 @@ function love.update(dt)
   else
     player.update(dt)
     playertwo.update(dt)
-    player.setOpponentPosition(playertwo.x, playertwo.y, playertwo.currentTexture:getWidth(), playertwo.currentTexture:getHeight()*5)
-    playertwo.setOpponentPosition(player.x,player.y,player.currentTexture:getWidth(),player.currentTexture:getHeight()*5)
+    updateParticles(dt)
+    player.setOpponentPosition(playertwo.x, playertwo.y, 0, 0)
+    playertwo.setOpponentPosition(player.x,player.y,0,0)
   end
 end
 
@@ -387,11 +444,7 @@ function love.draw()
     if showStats == true then
       love.graphics.setColor(255,0,0,255)
       love.graphics.rectangle("line",player.x-25,player.y,50,player.currentTexture:getHeight()*5)
-      love.graphics.print("PLAYER1: COLLIDERSTARTXY:("..(player.x-25).."x"..(player.x+50).."y)",1,150)
-      love.graphics.line(1,168,player.x,player.y)
       love.graphics.rectangle("line",playertwo.x-25,playertwo.y,50,playertwo.currentTexture:getHeight()*5)
-      love.graphics.print("PLAYER2: COLLIDERSTARTXY:("..(playertwo.x-25).."x"..(playertwo.x+50).."y)",1,180)
-      love.graphics.line(1,180,playertwo.x,playertwo.y)
       if nightMode == true then
         love.graphics.setColor(140,140,140,255)
       else
@@ -400,21 +453,26 @@ function love.draw()
     end
     if gameState == "player_2_wins" then
       --print("PLAYER 2 WINS")
-      love.graphics.draw(winScreens[2],1,1)
+      love.graphics.setColor(HSL(hue,255,200))
+      love.graphics.draw(winScreens[2],love.graphics.getWidth()/2-winScreens[2]:getWidth()/2,love.graphics.getHeight()*0.33)
+      love.graphics.setColor(255, 255, 255, 255)
     end
     if gameState == "player_1_wins" then
       --print("PLAYER 1 WINS")
-      love.graphics.draw(winScreens[1],1,1)
+      love.graphics.setColor(HSL(hue,255,200))
+      love.graphics.draw(winScreens[1],love.graphics.getWidth()/2-winScreens[1]:getWidth()/2,love.graphics.getHeight()*0.33)
+      love.graphics.setColor(255, 255, 255, 255)
     end
     player.draw()
+    renderParticles()
     playertwo.draw()
   end
   if showStats == true then
-    love.graphics.setColor(255,0,0,255)
-    love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024).."KB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y.."\n PLAYER1COLL: "..tostring(player.collided).."\n PLAYER2COLL: "..tostring(playertwo.collided).."\n T: "..timer.."\n T2: "..timertwo,1,1)
+    love.graphics.setColor(97,224,105,255)
+    love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024).."KB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y.."\n PLAYER1COLL: "..tostring(player.collided).."\n PLAYER2COLL: "..tostring(playertwo.collided).."\n T: "..timer.."\n T2: "..timertwo.."\n hue:"..hue,1,1)
   end
   if spCMD == true then
-    love.graphics.setColor(0,0,0,128)
+    love.graphics.setColor(20,20,20,255)
     love.graphics.rectangle("fill",1,love.graphics.getHeight()-28-(16*#returnString),love.graphics.getWidth(),love.graphics.getHeight()-28)
 
 
@@ -423,7 +481,7 @@ function love.draw()
     for k,v in ipairs(returnString) do
       love.graphics.print(returnString[k],1,love.graphics.getHeight()-42+(16*k)-(16*#returnString))
     end
-    love.graphics.setColor(0,0,0,200)
+    love.graphics.setColor(50,50,50,255)
     love.graphics.line(1,love.graphics.getHeight()-29,love.graphics.getWidth(),love.graphics.getHeight()-29)
     love.graphics.setColor(0,255,0,255)
     love.graphics.print("> "..inputCMD,1,love.graphics.getHeight()-21)
