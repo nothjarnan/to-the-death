@@ -6,13 +6,16 @@ opponent = {
   x = 0,
   y = 0
 }
-groundLevel = 458
+groundLevel = 463
 gravity = (35*100)
 scaleFactor = 5
 timer = 1
+local texture = player.player_idle_fists
 function player.load(playerNumber)
   player_idle_fists = {
-    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png") -- Load idle spriteset
+    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png"), -- Load idle spriteset
+    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png")
   }
   cPrint("Loaded idle sprites for weapon: fists","player1.lua")
   player_run_fists = {
@@ -26,7 +29,25 @@ function player.load(playerNumber)
     love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists.png"), -- Load attack spriteset, which is kinda sucky.
     love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists3.png"),
   }
-  cPrint("Loaded attack sprites for weapon: fists","player1.lua") -- Tell ingame console (F5) this.
+  player_idle_sword = {
+    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_sword.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_sword.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_sword.png")
+  }
+  player_run_sword = {
+    love.graphics.newImage("static_data/textures/playerSprites/player_run_sword_1.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/player_run_sword_2.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/player_run_sword_3.png"),
+  }
+  player_attack_sword = {
+    love.graphics.newImage("static_data/textures/playerSprites/player_attack_sword1.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/player_attack_sword2.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/player_attack_sword3.png"),
+  }
+  player_win = {
+    love.graphics.newImage("static_data/textures/playerSprites/guy_win.png")
+  }
+  cPrint("Loaded attack sprites for weapon: fists & sword","player1.lua") -- Tell ingame console (F5) this.
   cPrint("Finished loading.","player1.lua") -- Finished loading stuff.
   --spritebatch = love.graphics.newSpriteBatch(love.graphics.newImage("static_data/textures/playerSprites/spriteAtlas.png"),20,"dynamic")
   playerNumber = nil --> Completely unimportant number, dunno why it's there when I'm doing object oriented programming. What the hell.
@@ -39,7 +60,7 @@ function player.load(playerNumber)
 
   player.width = 35 -->
   player.height = 7 --> Not sure if these will be useless in a bit.
-  player.textureIdle = {} --> TODO: Load textures for every weapon. (animation)
+  --player.textureIdle = {} --> TODO: Load textures for every weapon. (animation)
   player.totalJumps = 0 -- This is just for double jumping, therefor it's not used, as double jumping was removed in ALPHA 0.0.2
   player.textureIdle = love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png")
   player.currentTexture = player.textureIdle
@@ -49,7 +70,10 @@ function player.load(playerNumber)
   --> Physics (temp)
   player.collided = false -- FIXME: Add proper player collisions.
   --> Weapon stuff.
-  player.weapon = "fists" -- Current weapon equipped. Defaults to Fists.
+  player.weapons = {
+    "fists", "sword"
+  }
+  player.weapon = player.weapons[love.math.random(1,#player.weapons)] -- Current weapon equipped.
   player.health = 100 -- Player's health (double)
   player.god = false -- Godmode. Should probably be a local variable to prevent cheating with memory editors.
   player.parts = {
@@ -58,7 +82,7 @@ function player.load(playerNumber)
     love.graphics.newImage("static_data/textures/playerSprites/parts/player_head.png"),
     love.graphics.newImage("static_data/textures/playerSprites/parts/player_legs.png"),
   }
-  for i=4, 1500 do
+  for i=4, 350 do
     --cPrint(i,"DEBUG")
     player.parts[i] = love.graphics.newImage("static_data/textures/playerSprites/parts/bloodspot.png")
   end
@@ -70,14 +94,14 @@ end
 
 function player.movement(dt)
   --TODO: Movement being very smooth. Like. Very, very smooth.
-  if love.keyboard.isDown("d") and player.xvel <  player.speed then
+  if love.keyboard.isDown("d") and player.xvel <  player.speed and gameState ~= "player_1_wins" then
     player.xvel = player.xvel + player.speed * dt -- When correct key is down, increment player's velocity by it's max speed times a time constant.
   end
-  if love.keyboard.isDown("a") and player.xvel >  -player.speed then
+  if love.keyboard.isDown("a") and player.xvel >  -player.speed and gameState ~= "player_1_wins" then
     player.xvel = player.xvel - player.speed * dt
   end
   if love.keyboard.isDown("w") and player.xvel <  player.speed then
-    if (player.y + player.height) >= groundLevel-10 then -- When the player's height is around ground level and totalJumps == 0, set player's Y velocity to -820, causing the player to launch in the air.
+    if (player.y + player.height) >= groundLevel-10 and gameState ~= "player_1_wins" then -- When the player's height is around ground level and totalJumps == 0, set player's Y velocity to -820, causing the player to launch in the air.
       player.yvel = -820
     elseif player.totalJumps == 0 then
       player.totalJumps = 1
@@ -88,8 +112,18 @@ end
 function player.animate(dt) --> I'm not even sure how the hell this even works properly, but it works. So I'll keep it.
   timer = timer + 3 * dt    --> Whackjob, right? Riiiight? ..no?
   timer_floored = math.floor(timer)
+  --cPrint(tostring(player_idle_fists[1])..","..tostring(player_run_fists[timer_floored])..","..tostring(player_attack_fists[timer_floored])..",")
   if timer_floored == 3 and timer > 3.9 then
     timer = 1 -- This timer is made for timing the animation, hence why it is almost always ticking. Timer can be stopped when it is not called in player.update(dt)
+  end
+  if timer_floored == 1 and gameState == "player_1_wins" then
+
+    if (player.y + player.height) >= groundLevel-10 then -- When the player's height is around ground level and totalJumps == 0, set player's Y velocity to -820, causing the player to launch in the air.
+      player.yvel = -820
+      player.currentTexture = player_win[1]
+    elseif player.totalJumps == 0 then
+      player.totalJumps = 1
+    end
   end
   if timer_floored == 1 or timer_floored == 3 then
     player.canAttack = true
@@ -97,7 +131,10 @@ function player.animate(dt) --> I'm not even sure how the hell this even works p
   --cPrint(timer,timer_floored,player.currentTexture)
   if not love.keyboard.isDown("w","a","d","lshift") then -- Check if the keys for movement & attacking is down, if not, check weapon and play idle animation for specified weapon.
     if player.weapon == "fists" then
-      player.currentTexture = player_idle_fists[1]
+      player.currentTexture = player_idle_fists[timer_floored]
+    end
+    if player.weapon == "sword" then
+      player.currentTexture = player_idle_sword[timer_floored]
     end
   end
   if love.keyboard.isDown("a") then
@@ -105,20 +142,43 @@ function player.animate(dt) --> I'm not even sure how the hell this even works p
       scaleFactor = -5
       player.currentTexture = player_run_fists[timer_floored]
     end
+    if player.weapon == "sword" then
+      scaleFactor = -5
+      player.currentTexture = player_run_sword[timer_floored]
+    end
   end
   if love.keyboard.isDown("d") then
     if player.weapon == "fists" then
       scaleFactor = 5
       player.currentTexture = player_run_fists[timer_floored]
     end
+    if player.weapon == "sword" then
+      scaleFactor = 5
+      player.currentTexture = player_run_sword[timer_floored]
+    end
   end
   if love.keyboard.isDown("lshift") and timer_floored < 3 then
     if player.weapon == "fists" then
       player.currentTexture = player_attack_fists[timer_floored]
       if player.collided == true then
-        cPrint("HIYA!","player1.lua")
+        --cPrint("HIYA!","player1.lua")
         if timer_floored == 2 and player.canAttack then
-          playertwo.sendDamage(10) -- When attack animation 'attacks', send damage to opponent if they've collided with the player-
+          local critChance = love.math.random(0,4)
+          if critChance == 4 then
+            playertwo.sendDamage(love.math.random(18,21))
+          else
+            playertwo.sendDamage(15)
+          end
+          player.canAttack = false
+        end
+      end
+    end
+    if player.weapon == "sword" then
+      player.currentTexture = player_attack_sword[timer_floored]
+      if player.collided == true then
+        --cPrint("HIYA!","player1.lua")
+        if timer_floored == 2 and player.canAttack then
+          playertwo.sendDamage(25) -- When attack animation 'attacks', send damage to opponent if they've collided with the player-
           player.canAttack = false
         end
       end
@@ -137,7 +197,7 @@ function player.sendDamage(damage)
       player.xvel = 5500
       player.yvel = -860
     else
-      player.xvel = 350
+      player.xvel = 450
       player.yvel = -350
     end
   else
@@ -145,7 +205,7 @@ function player.sendDamage(damage)
       player.xvel = -5500
       player.yvel = -860
     else
-      player.xvel = -350
+      player.xvel = -450
       player.yvel = -350
     end
   end
@@ -153,7 +213,12 @@ function player.sendDamage(damage)
   if player.god == false then -- If the player doesn't have godmode, allow player to take damage from opponent
     cPrint("Player1: "..damage.." taken!","player1.lua")
     player.health = player.health +-dmg
-    if player.health < 0 then
+    if playertwo.weapon == "fists" and damage > 15 then
+      addText("Critical! -"..damage.." HP",player.x, player.y)
+    else
+      addText("-"..damage.." HP",player.x,player.y)
+    end
+    if player.health <= 1 then
       explodePlayer(player.x,player.y,player.parts,dt)
     end
   else
@@ -199,8 +264,9 @@ end
 
 function player.update(dt)
   --TODO: Update everything.
+  --cPrint(#player.player_attack_fists ..", "..#player.player_idle_fists..", "..#player.player_attack_fists,"debug")
   if focused == true then
-    if player.health >= 0 then -- If the player's health is above 0, update everything. Else, the player is probably dead. So don't update or render the player.
+    if player.health >= 1 then -- If the player's health is above 0, update everything. Else, the player is probably dead. So don't update or render the player.
       player.physics(dt)
       player.bounds()
       player.animate(dt)
@@ -213,9 +279,14 @@ end
 
 function player.draw()
  --TODO: what
- if player.health >= 0 then
+ if player.health >= 1 then
    if rainbow then
      love.graphics.setColor(HSL(hue2,255,200))
+   end
+   if player.currentTexture == nil then
+     cPrint("Player1 texture nil!! Just restart the game, or enter 'resetcharacters' in console.","WARNING")
+     player.currentTexture = player.textureIdle
+     --player.load()
    end
    love.graphics.draw(player.currentTexture,player.x,player.y,0,scaleFactor,5,player.currentTexture:getWidth()/2,0) -- Draw the player at their X and Y cordinates, with an offset of 50% of their texture width.
  else

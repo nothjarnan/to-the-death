@@ -1,6 +1,7 @@
 require "static_data/interfaces/player" --> Apparently interfaces cannot be outside of root directories. What the hell?
 require "static_data/interfaces/player2"
 require "static_data/interfaces/particles"
+require "static_data/interfaces/damagetext"
 local utf8 = require("utf8")
 --> It doesn't work, still. Wtf
 version = "v0.1.5 ALPHA"
@@ -66,7 +67,7 @@ function love.load()
   printedOnce = false
   inputCMD = ""
   spCMD = false
-
+  gamefont = love.graphics.newFont(12)
   love.graphics.setDefaultFilter("linear","nearest", 0)
   knownstates = {
     "main_menu",
@@ -106,6 +107,7 @@ function love.load()
   end
   hue = 0
   hue2 = 130
+
 end
 function love.textinput(t)
     inputCMD = inputCMD..t
@@ -113,6 +115,7 @@ end
 function cPrint(string,callerID)
   print(string)
   if not callerID then callerID = "main.lua" end
+  if callerID == "WARNING" then spCMD = true end
   returnString[#returnString+1] = "["..callerID.."]: "..string
 end
 function love.focus(focus)
@@ -145,7 +148,7 @@ function love.keypressed(k)
       "  level <int: level> - Sets current level to specified int",
       "  setstate <string: state> - Sets gamestate [DANGEROUS]",
       "  togglecolliders - Toggles experimental collisions on and off [BUGGY]",
-      "  togglecheats - Toggles cheats for this session (Not available in MP)",
+      "  tc - Toggles cheats for this session (Not available in MP)",
       "  connect <ip:port> - Connects to MP server (NYI)",
       "  startserver - Starts a MP server (WIP)",
     }
@@ -156,6 +159,7 @@ function love.keypressed(k)
       "  god <int:player> - Toggles godmode for specified player (1-2)",
       "  kill <int:player> - Kills specified player (1-2)",
       "  damage <int:player> - Takes off 10hp from specified player (1-2)",
+      "  explode <int: player or 'all'> - This is pretty self explanatory"
     }
     returnString[#returnString+1] = inputCMD
     if inputCMD == "help" then
@@ -203,7 +207,7 @@ function love.keypressed(k)
         rainbow = true
       end
 
-    elseif inputCMD == "togglecheats" then
+    elseif inputCMD == "tc" then
       cheats = not cheats
       if cheats == true then
         returnString[#returnString+1] = "["..prefixCMD.."]: Cheats enabled."
@@ -229,6 +233,21 @@ function love.keypressed(k)
         else
           returnString[#returnString+1] = "["..prefixCMD.."]: Player2 is no longer god."
         end
+      end
+    elseif string.find(inputCMD,"explode ",1) and cheats == true then
+      local pl = string.gsub(inputCMD,"explode ","")
+      if pl == "1" then
+        player.sendDamage(99999)
+        cPrint("Player1 killed.",prefixCMD)
+      elseif pl == "2" then
+        playertwo.sendDamage(99999)
+        cPrint("Player2 killed.",prefixCMD)
+      elseif pl == "all" then
+        player.sendDamage(99999)
+        playertwo.sendDamage(99999)
+        cPrint("Player1 & Player2 killed.",prefixCMD)
+      else
+        cPrint(pl.." is not a valid player ID!",prefixCMD)
       end
     elseif string.find(inputCMD,"damage ",1) and cheats == true then
       local ply = string.gsub(inputCMD,"damage ","")
@@ -399,6 +418,7 @@ function love.update(dt)
     player.update(dt)
     playertwo.update(dt)
     updateParticles(dt)
+    updateTexts(dt)
     player.setOpponentPosition(playertwo.x, playertwo.y, 0, 0)
     playertwo.setOpponentPosition(player.x,player.y,0,0)
   end
@@ -443,8 +463,8 @@ function love.draw()
 
     if showStats == true then
       love.graphics.setColor(255,0,0,255)
-      love.graphics.rectangle("line",player.x-25,player.y,50,player.currentTexture:getHeight()*5)
-      love.graphics.rectangle("line",playertwo.x-25,playertwo.y,50,playertwo.currentTexture:getHeight()*5)
+      --love.graphics.rectangle("line",player.x-25,player.y,50,player.currentTexture:getHeight()*5)
+      --love.graphics.rectangle("line",playertwo.x-25,playertwo.y,50,playertwo.currentTexture:getHeight()*5)
       if nightMode == true then
         love.graphics.setColor(140,140,140,255)
       else
@@ -465,6 +485,7 @@ function love.draw()
     end
     player.draw()
     renderParticles()
+    renderText()
     playertwo.draw()
   end
   if showStats == true then
@@ -472,7 +493,7 @@ function love.draw()
     love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024).."KB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y.."\n PLAYER1COLL: "..tostring(player.collided).."\n PLAYER2COLL: "..tostring(playertwo.collided).."\n T: "..timer.."\n T2: "..timertwo.."\n hue:"..hue,1,1)
   end
   if spCMD == true then
-    love.graphics.setColor(20,20,20,255)
+    love.graphics.setColor(20,20,20,90)
     love.graphics.rectangle("fill",1,love.graphics.getHeight()-28-(16*#returnString),love.graphics.getWidth(),love.graphics.getHeight()-28)
 
 
