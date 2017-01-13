@@ -7,7 +7,7 @@ opponentt={
 }
 groundLeveltwo = 463
 gravitytwo = (35*100)
-scaleFactortwo = 5
+scaleFactortwo = 6
 timertwo = 2
 function playertwo.load(playerNumber)
   playertwo.exploded = false
@@ -65,7 +65,7 @@ function playertwo.movement(dt)
   end
   if love.keyboard.isDown("up") and playertwo.xvel <  playertwo.speed and gameState ~= "player_2_wins" then
     if (playertwo.y + playertwo.height) >= groundLeveltwo-10 then
-      playertwo.yvel = -820
+      playertwo.yvel = -900
     elseif playertwo.totalJumps == 0 then
       playertwo.totalJumps = 1
     end
@@ -102,21 +102,21 @@ function playertwo.animate(dt) --> I'm not even sure how the hell this even work
   end
   if love.keyboard.isDown("left") then
     if playertwo.weapon == "fists" then
-      scaleFactortwo = -5
+      scaleFactortwo = -playerScale
       playertwo.currentTexture = player_run_fists[timertwo_floored]
     end
     if playertwo.weapon == "sword" then
-      scaleFactortwo = -5
+      scaleFactortwo = -playerScale
       playertwo.currentTexture = player_run_sword[timertwo_floored]
     end
   end
   if love.keyboard.isDown("right") then
     if playertwo.weapon == "fists" then
-      scaleFactortwo = 5
+      scaleFactortwo = playerScale
       playertwo.currentTexture = player_run_fists[timertwo_floored]
     end
     if playertwo.weapon == "sword" then
-      scaleFactortwo = 5
+      scaleFactortwo = playerScale
       playertwo.currentTexture = player_run_sword[timertwo_floored]
     end
   end
@@ -206,14 +206,18 @@ function playertwo.setOpponentPosition(x,y,w,h)
   opponentt.height = h
 end
 function playertwo.bounds()
-  if playertwo.x >= opponentt.x-50 and playertwo.x <= opponentt.x+50 then
-    playertwo.collided = true
+  if not excollisions then
+    if playertwo.x >= opponentt.x-50 and playertwo.x <= opponentt.x+50 then -- Checks if player is within opponent's bounding boxes.
+      playertwo.collided = true -- If player is, allow them to take damage.
+    else
+      playertwo.collided=false -- Else, just don't bother with it.
+    end
   else
-    playertwo.collided=false
-  end
-
-  if playertwo.x < -10 then
-    playertwo.x = -10
+    if playertwo.x >= opponentt.x-50 and playertwo.x <= opponentt.x+50 and playertwo.y+(playertwo.currentTexture:getHeight()*playerScale) >= opponentt.y and playertwo.y <= opponentt.y+(playertwo.currentTexture:getHeight()*playerScale)  then -- Checks if player is within opponent's bounding boxes.
+      playertwo.collided = true -- If player is, allow them to take damage.
+    else
+      playertwo.collided = false -- Else, just don't bother with it.
+    end
   end
   if playertwo.x > love.graphics.getWidth()+10 then
     playertwo.x = love.graphics.getWidth()+10
@@ -255,10 +259,10 @@ function playertwo.draw()
      love.graphics.setColor(HSL(hue2,255,200))
    end
    if playertwo.currentTexture == nil then
-     cPrint("Player2 texture nil!! Just restart the game, or enter 'resetcharacters' in console.","WARNING")
+     --cPrint("Player2 texture nil!! Just restart the game, or enter 'resetcharacters' in console.","WARNING")
      playertwo.currentTexture = player.textureIdle
    end
-   love.graphics.draw(playertwo.currentTexture,playertwo.x,playertwo.y,0,scaleFactortwo,5,playertwo.currentTexture:getWidth()/2,0)
+   love.graphics.draw(playertwo.currentTexture,playertwo.x,playertwo.y,0,scaleFactortwo,playerScale,playertwo.currentTexture:getWidth()/2,0)
    love.graphics.setColor(255,255,255,255)
  else
    if gameState ~= "main_menu" then

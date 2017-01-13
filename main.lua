@@ -42,6 +42,7 @@ function love.load()
   }
   stats = love.graphics.getStats()
 
+	playerScale = 6
   changeLog = {
     "Changelog To the Death "..version..":",
     "- Players no longer collide, since it only causes problems anyway.",
@@ -207,7 +208,8 @@ function love.keypressed(k)
         returnString[#returnString+1] = "["..prefixCMD.."]: Wooo rainbows!"
         rainbow = true
       end
-
+		elseif inputCMD == "togglecolliders" then
+			excollisions = not excollisions
     elseif inputCMD == "tc" then
       cheats = not cheats
       if cheats == true then
@@ -436,7 +438,7 @@ function love.draw()
         love.graphics.setColor(255,255,255,255)
       end
 
-      love.graphics.draw(menuBG,love.graphics.getWidth()/2, love.graphics.getHeight()/2,0,0.9,0.9,menuBG:getWidth()/2, menuBG:getHeight()/2)
+      love.graphics.draw(menuBG,1,1,0,1,1)
       love.graphics.setColor(0,0,0,255)
       love.graphics.draw(menuIcon,love.graphics.getWidth()/2, love.graphics.getHeight()/3,0,1,1,menuIcon:getWidth()/2, menuIcon:getHeight()/2)
       love.graphics.setColor(0,0,0,a)
@@ -491,7 +493,7 @@ function love.draw()
   end
   if showStats == true then
     love.graphics.setColor(97,224,105,255)
-    love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024/1024).."MB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y.."\n PLAYER1COLL: "..tostring(player.collided).."\n PLAYER2COLL: "..tostring(playertwo.collided).."\n T: "..timer.."\n T2: "..timertwo.."\n hue:"..hue.."\n len particles:"..#particles.parts,1,1)
+    love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024/1024).."MB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y.."\n PLAYER1COLL: "..tostring(player.collided).."\n PLAYER2COLL: "..tostring(playertwo.collided).."\n T: "..timer.."\n T2: "..timertwo.."\n hue:"..hue.."\n len particles:"..#particles.."\n playerScale:"..playerScale.."\n p1sf: "..scaleFactor.."\n p2sf"..scaleFactortwo,1,1)
   end
   if spCMD == true then
     love.graphics.setColor(20,20,20,90)

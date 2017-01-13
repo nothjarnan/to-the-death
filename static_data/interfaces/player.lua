@@ -8,7 +8,7 @@ opponent = {
 }
 groundLevel = 463
 gravity = (35*100)
-scaleFactor = 5
+scaleFactor = 6
 timer = 1
 attemptedFix = false
 local texture = player.player_idle_fists
@@ -112,7 +112,7 @@ function player.movement(dt)
   end
   if love.keyboard.isDown("w") and player.xvel <  player.speed then
     if (player.y + player.height) >= groundLevel-10 and gameState ~= "player_1_wins" then -- When the player's height is around ground level and totalJumps == 0, set player's Y velocity to -820, causing the player to launch in the air.
-      player.yvel = -820
+      player.yvel = -900
     elseif player.totalJumps == 0 then
       player.totalJumps = 1
     end
@@ -149,21 +149,21 @@ function player.animate(dt) --> I'm not even sure how the hell this even works p
   end
   if love.keyboard.isDown("a") then
     if player.weapon == "fists" then
-      scaleFactor = -5
+      scaleFactor = -playerScale
       player.currentTexture = player_run_fists[timer_floored]
     end
     if player.weapon == "sword" then
-      scaleFactor = -5
+      scaleFactor = -playerScale
       player.currentTexture = player_run_sword[timer_floored]
     end
   end
   if love.keyboard.isDown("d") then
     if player.weapon == "fists" then
-      scaleFactor = 5
+      scaleFactor = playerScale
       player.currentTexture = player_run_fists[timer_floored]
     end
     if player.weapon == "sword" then
-      scaleFactor = 5
+      scaleFactor = playerScale
       player.currentTexture = player_run_sword[timer_floored]
     end
   end
@@ -173,9 +173,9 @@ function player.animate(dt) --> I'm not even sure how the hell this even works p
       if player.collided == true then
         --cPrint("HIYA!","player1.lua")
         if timer_floored == 2 and player.canAttack then
-          local critChance = love.math.random(0,4)
+          local critChance = love.math.random(1,4)
           if critChance == 4 then
-            playertwo.sendDamage(love.math.random(18,21))
+            playertwo.sendDamage(love.math.random(18,25))
           else
             playertwo.sendDamage(15)
           end
@@ -254,12 +254,19 @@ function player.setOpponentPosition(x,y,w,h)
 end
 ab = false
 function player.bounds()
-  if player.x >= opponent.x-50 and player.x <= opponent.x+50 then -- Checks if player is within opponent's bounding boxes.
-    player.collided = true -- If player is, allow them to take damage.
+  if not excollisions then
+    if player.x >= opponent.x-50 and player.x <= opponent.x+50 then -- Checks if player is within opponent's bounding boxes.
+      player.collided = true -- If player is, allow them to take damage.
+    else
+      player.collided=false -- Else, just don't bother with it.
+    end
   else
-    player.collided=false -- Else, just don't bother with it.
+    if player.x >= opponent.x-50 and player.x <= opponent.x+50 and player.y+(player.currentTexture:getHeight()*playerScale) >= opponent.y and player.y <= opponent.y+(player.currentTexture:getHeight()*playerScale)  then -- Checks if player is within opponent's bounding boxes.
+      player.collided = true -- If player is, allow them to take damage.
+    else
+      player.collided=false -- Else, just don't bother with it.
+    end
   end
-
   if player.x < -10 then -- Check that player doesn't go outside of view.
     player.x = -10
   end
@@ -342,7 +349,7 @@ function player.draw()
      player.currentTexture = player.textureIdle
      --player.load()
    end
-   love.graphics.draw(player.currentTexture,player.x,player.y,0,scaleFactor,5,player.currentTexture:getWidth()/2,0) -- Draw the player at their X and Y cordinates, with an offset of 50% of their texture width.
+   love.graphics.draw(player.currentTexture,player.x,player.y,0,scaleFactor,playerScale,player.currentTexture:getWidth()/2,0) -- Draw the player at their X and Y cordinates, with an offset of 50% of their texture width.
  else
   if gameState ~= "main_menu" then
      gameState = "player_2_wins" -- Check if gamestate is not main menu, if it's not, and player's health is less than or equal to 0, announce that opponent won.
