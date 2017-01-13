@@ -10,41 +10,9 @@ gravitytwo = (35*100)
 scaleFactortwo = 5
 timertwo = 2
 function playertwo.load(playerNumber)
+  playertwo.exploded = false
   playercol = {
     love.math.random(90,255), love.math.random(110,255) , love.math.random(90,255)
-  }
-  playertwo_idle_fists = {
-    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png")
-  }
-  cPrint("Loaded idle sprites for weapon: fists","player2.lua")
-  playertwo_run_fists = {
-    love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_1.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_2.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_3.png"),
-  }
-  cPrint("Loaded running sprites for weapon: fists","player2.lua")
-  playertwo_attack_fists = {
-    love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists2.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists.png"), -- Load attack spriteset, which is kinda sucky.
-    love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists3.png"),
-  }
-  playertwo_win = {
-    love.graphics.newImage("static_data/textures/playerSprites/guy_win.png")
-  }
-  playertwo_idle_sword = {
-    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_sword.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_sword.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/guy_idle_sword.png")
-  }
-  playertwo_run_sword = {
-    love.graphics.newImage("static_data/textures/playerSprites/player_run_sword_1.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/player_run_sword_2.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/player_run_sword_3.png"),
-  }
-  playertwo_attack_sword = {
-    love.graphics.newImage("static_data/textures/playerSprites/player_attack_sword1.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/player_attack_sword2.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/player_attack_sword3.png"),
   }
   cPrint("Loaded attack sprites for weapon: fists","player2.lua")
   cPrint("Finished loading.","player2.lua")
@@ -69,22 +37,18 @@ function playertwo.load(playerNumber)
   playertwo.collided = false
   playertwo.inGround = true
   --> Weapon stuff.
-  playertwo.weapons = {
-    "fists","sword"
-  }
-  playertwo.health = 100
-  playertwo.weapon = playertwo.weapons[love.math.random(1,#playertwo.weapons)]
-  playertwo.god = false
-  playertwo.parts = {
-    love.graphics.newImage("static_data/textures/playerSprites/parts/player_arm.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/parts/player_body.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/parts/player_head.png"),
-    love.graphics.newImage("static_data/textures/playerSprites/parts/player_legs.png"),
-  }
-  for i=4, 350 do
-    --cPrint(i,"DEBUG")
-    playertwo.parts[i] = love.graphics.newImage("static_data/textures/playerSprites/parts/bloodspot.png")
+  if isDemo then
+    playertwo.weapons = {
+      "fists","sword"
+    }
+  else
+    playertwo.weapons = {
+      "fists","sword"
+    }
   end
+  playertwo.health = 100
+  playertwo.weapon = player.weapon
+  playertwo.god = false
 end
 
 function playertwo.hitReg(dt)
@@ -122,7 +86,7 @@ function playertwo.animate(dt) --> I'm not even sure how the hell this even work
 
     if (playertwo.y + playertwo.height) >= groundLeveltwo-10 then -- When the player's height is around ground level and totalJumps == 0, set player's Y velocity to -820, causing the player to launch in the air.
       playertwo.yvel = -820
-      playertwo.currentTexture = playertwo_win[1]
+      playertwo.currentTexture = player_win[1]
     elseif playertwo.totalJumps == 0 then
       playertwo.totalJumps = 1
     end
@@ -130,35 +94,35 @@ function playertwo.animate(dt) --> I'm not even sure how the hell this even work
   --print(timertwo,timertwo_floored,playertwo.currentTexture)
   if not love.keyboard.isDown("left","up","right","rshift") then
     if playertwo.weapon == "fists" then
-      playertwo.currentTexture = playertwo_idle_fists[1]
+      playertwo.currentTexture = player_idle_fists[1]
     end
     if playertwo.weapon == "sword" then
-      playertwo.currentTexture = playertwo_idle_sword[timertwo_floored]
+      playertwo.currentTexture = player_idle_sword[timertwo_floored]
     end
   end
   if love.keyboard.isDown("left") then
     if playertwo.weapon == "fists" then
       scaleFactortwo = -5
-      playertwo.currentTexture = playertwo_run_fists[timertwo_floored]
+      playertwo.currentTexture = player_run_fists[timertwo_floored]
     end
     if playertwo.weapon == "sword" then
       scaleFactortwo = -5
-      playertwo.currentTexture = playertwo_run_sword[timertwo_floored]
+      playertwo.currentTexture = player_run_sword[timertwo_floored]
     end
   end
   if love.keyboard.isDown("right") then
     if playertwo.weapon == "fists" then
       scaleFactortwo = 5
-      playertwo.currentTexture = playertwo_run_fists[timertwo_floored]
+      playertwo.currentTexture = player_run_fists[timertwo_floored]
     end
     if playertwo.weapon == "sword" then
       scaleFactortwo = 5
-      playertwo.currentTexture = playertwo_run_sword[timertwo_floored]
+      playertwo.currentTexture = player_run_sword[timertwo_floored]
     end
   end
   if love.keyboard.isDown("rshift") and timertwo_floored < 3 then
     if playertwo.weapon == "fists" then
-      playertwo.currentTexture = playertwo_attack_fists[timertwo_floored]
+      playertwo.currentTexture = player_attack_fists[timertwo_floored]
       if playertwo.collided == true then
         --cPrint("HIYA!","player2.lua")
         if timertwo_floored == 2 and playertwo.canAttack then
@@ -174,7 +138,7 @@ function playertwo.animate(dt) --> I'm not even sure how the hell this even work
       end
     end
     if playertwo.weapon == "sword" then
-      playertwo.currentTexture = playertwo_attack_sword[timertwo_floored]
+      playertwo.currentTexture = player_attack_sword[timertwo_floored]
       if playertwo.collided == true then
         --cPrint("HIYA!","player1.lua")
         if timertwo_floored == 2 and playertwo.canAttack then
@@ -218,8 +182,9 @@ function playertwo.sendDamage(damage)
       addText("-"..damage.." HP",player.x,player.y)
     end
     playertwo.health = playertwo.health +-dmg
-    if playertwo.health < 1 then
-      explodePlayer(playertwo.x,playertwo.y,playertwo.parts,dt)
+    if playertwo.health < 1 and playertwo.exploded == false then
+      playertwo.exploded = true
+      explodePlayer(playertwo.x,playertwo.y,parts,dt)
     end
   else
     cPrint("I am god. You cannot hurt me.","player2.lua")
@@ -291,7 +256,7 @@ function playertwo.draw()
    end
    if playertwo.currentTexture == nil then
      cPrint("Player2 texture nil!! Just restart the game, or enter 'resetcharacters' in console.","WARNING")
-     playertwo.currentTexture = playertwo.textureIdle
+     playertwo.currentTexture = player.textureIdle
    end
    love.graphics.draw(playertwo.currentTexture,playertwo.x,playertwo.y,0,scaleFactortwo,5,playertwo.currentTexture:getWidth()/2,0)
    love.graphics.setColor(255,255,255,255)

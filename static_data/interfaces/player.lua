@@ -10,8 +10,11 @@ groundLevel = 463
 gravity = (35*100)
 scaleFactor = 5
 timer = 1
+attemptedFix = false
 local texture = player.player_idle_fists
 function player.load(playerNumber)
+  player.exploded = false
+  attemptedFix = false
   player_idle_fists = {
     love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png"), -- Load idle spriteset
     love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png"),
@@ -70,21 +73,28 @@ function player.load(playerNumber)
   --> Physics (temp)
   player.collided = false -- FIXME: Add proper player collisions.
   --> Weapon stuff.
-  player.weapons = {
-    "fists", "sword"
-  }
+  if isDemo then
+    player.weapons = {
+      "fists","sword"
+    }
+  else
+    player.weapons = {
+      "fists","sword"
+    }
+  end
   player.weapon = player.weapons[love.math.random(1,#player.weapons)] -- Current weapon equipped.
   player.health = 100 -- Player's health (double)
   player.god = false -- Godmode. Should probably be a local variable to prevent cheating with memory editors.
-  player.parts = {
+  parts = {
     love.graphics.newImage("static_data/textures/playerSprites/parts/player_arm.png"),
     love.graphics.newImage("static_data/textures/playerSprites/parts/player_body.png"),
     love.graphics.newImage("static_data/textures/playerSprites/parts/player_head.png"),
     love.graphics.newImage("static_data/textures/playerSprites/parts/player_legs.png"),
+    love.graphics.newImage("static_data/textures/playerSprites/parts/sword.png")
   }
-  for i=4, 350 do
+  for i=5, 350 do
     --cPrint(i,"DEBUG")
-    player.parts[i] = love.graphics.newImage("static_data/textures/playerSprites/parts/bloodspot.png")
+    parts[i] = love.graphics.newImage("static_data/textures/playerSprites/parts/bloodspot.png")
   end
 end
 
@@ -218,8 +228,9 @@ function player.sendDamage(damage)
     else
       addText("-"..damage.." HP",player.x,player.y)
     end
-    if player.health <= 1 then
-      explodePlayer(player.x,player.y,player.parts,dt)
+    if player.health <= 1 and player.exploded == false then
+      player.exploded = true
+      explodePlayer(player.x,player.y,parts,dt)
     end
   else
     cPrint("I am god! Opponent cannot damage me.","player1.lua") -- Else, mock the player in console (F5).
@@ -284,7 +295,50 @@ function player.draw()
      love.graphics.setColor(HSL(hue2,255,200))
    end
    if player.currentTexture == nil then
-     cPrint("Player1 texture nil!! Just restart the game, or enter 'resetcharacters' in console.","WARNING")
+     if attemptedFix == false then
+       cPrint("Attempting error fix..","INFO")
+       player_idle_fists = {
+         love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png"), -- Load idle spriteset
+         love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png"),
+         love.graphics.newImage("static_data/textures/playerSprites/guy_idle_.png")
+       }
+       cPrint("Loaded idle sprites for weapon: fists","player1.lua")
+       player_run_fists = {
+         love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_1.png"), -- Load running spriteset
+         love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_2.png"),
+         love.graphics.newImage("static_data/textures/playerSprites/player_run_fists_3.png"),
+       }
+       cPrint("Loaded running sprites for weapon: fists","player1.lua")
+       player_attack_fists = {
+         love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists2.png"),
+         love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists.png"), -- Load attack spriteset, which is kinda sucky.
+         love.graphics.newImage("static_data/textures/playerSprites/player_attack_fists3.png"),
+       }
+       player_idle_sword = {
+         love.graphics.newImage("static_data/textures/playerSprites/guy_idle_sword.png"),
+         love.graphics.newImage("static_data/textures/playerSprites/guy_idle_sword.png"),
+         love.graphics.newImage("static_data/textures/playerSprites/guy_idle_sword.png")
+       }
+       player_run_sword = {
+         love.graphics.newImage("static_data/textures/playerSprites/player_run_sword_1.png"),
+         love.graphics.newImage("static_data/textures/playerSprites/player_run_sword_2.png"),
+         love.graphics.newImage("static_data/textures/playerSprites/player_run_sword_3.png"),
+       }
+       player_attack_sword = {
+         love.graphics.newImage("static_data/textures/playerSprites/player_attack_sword1.png"),
+         love.graphics.newImage("static_data/textures/playerSprites/player_attack_sword2.png"),
+         love.graphics.newImage("static_data/textures/playerSprites/player_attack_sword3.png"),
+       }
+       player_win = {
+         love.graphics.newImage("static_data/textures/playerSprites/guy_win.png")
+       }
+       player.currentTexture = player_idle_fists[1]
+       attemptedFix = true
+       if player.currentTexture == nil then
+         cPrint("Error fix failed. :(","WARNING")
+       end
+     end
+     --cPrint("Player1 texture nil!! Just restart the game, or enter 'resetcharacters' in console.","WARNING")
      player.currentTexture = player.textureIdle
      --player.load()
    end

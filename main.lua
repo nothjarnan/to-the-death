@@ -7,6 +7,7 @@ local utf8 = require("utf8")
 version = "v0.1.5 ALPHA"
 local prefixCMD = "stout"
 local isGJCLIENT = false
+local isDemo = false
 function HSL(h, s, l, a)
 	if s<=0 then return l,l,l,a end
 	h, s, l = h/256*6, s/255, l/255
@@ -124,7 +125,7 @@ end
 function love.keypressed(k)
   --print(k)
   love.keyboard.setKeyRepeat(spCMD)
-  if spCMD == true then
+  if spCMD == true and isDemo == false then
 
     if k == "backspace" then
     -- get the byte offset to the last UTF-8 character in the string.
@@ -324,7 +325,7 @@ function love.keypressed(k)
     end
     gameState = "main_menu"
   end
-  if k == "f5" then
+  if k == "f5" and isDemo == false then
     inputCMD =""
     spCMD = not spCMD
     nightMode = spCMD
@@ -435,7 +436,7 @@ function love.draw()
         love.graphics.setColor(255,255,255,255)
       end
 
-      love.graphics.draw(menuBG,love.graphics.getWidth()/2, love.graphics.getHeight()/2,math.rad(-10),0.9,0.9,menuBG:getWidth()/2, menuBG:getHeight()/2)
+      love.graphics.draw(menuBG,love.graphics.getWidth()/2, love.graphics.getHeight()/2,0,0.9,0.9,menuBG:getWidth()/2, menuBG:getHeight()/2)
       love.graphics.setColor(0,0,0,255)
       love.graphics.draw(menuIcon,love.graphics.getWidth()/2, love.graphics.getHeight()/3,0,1,1,menuIcon:getWidth()/2, menuIcon:getHeight()/2)
       love.graphics.setColor(0,0,0,a)
@@ -490,7 +491,7 @@ function love.draw()
   end
   if showStats == true then
     love.graphics.setColor(97,224,105,255)
-    love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024).."KB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y.."\n PLAYER1COLL: "..tostring(player.collided).."\n PLAYER2COLL: "..tostring(playertwo.collided).."\n T: "..timer.."\n T2: "..timertwo.."\n hue:"..hue,1,1)
+    love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024/1024).."MB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y.."\n PLAYER1COLL: "..tostring(player.collided).."\n PLAYER2COLL: "..tostring(playertwo.collided).."\n T: "..timer.."\n T2: "..timertwo.."\n hue:"..hue.."\n len particles:"..#particles.parts,1,1)
   end
   if spCMD == true then
     love.graphics.setColor(20,20,20,90)
@@ -509,6 +510,8 @@ function love.draw()
     love.graphics.setColor(255,255,255,255)
   end
   love.graphics.setColor(255,255,255,255)
-  --love.graphics.print("To the Death | "..version,1,love.graphics.getHeight()-14)
-  stats = love.graphics.getStats()
+	if isDemo then
+  	love.graphics.print("To the Death Demo",5,5)
+	end
+	stats = love.graphics.getStats()
 end

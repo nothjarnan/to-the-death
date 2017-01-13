@@ -1,3 +1,9 @@
+                    -- LEGAL NOTICE --
+------------------
+-- (C) LINUS 'NOTHY' RAMNEBORG 2017. ALL RIGHTS RESERVED.
+-- NO REUSE ALLOWED. NO DISTRIBUTION OUTSIDE OF GAMEJOLT.COM ALLOWED.
+-- DON'T BE STUPID, DON'T STEAL CODE.
+-------------------
 particles = {
   parts = {},
   xvel = {},
@@ -16,7 +22,7 @@ function explodePlayer(x,y,inP,dt)
   particles.friction = {}
   for k,v in ipairs(particles.parts) do
     particles.xvel[k] = love.math.random(-300,300)
-    particles.yvel[k] = love.math.random(-1300,500)
+    particles.yvel[k] = love.math.random(-700,500)
     particles.x[k] = x
     particles.y[k] = y
     particles.friction[k] = love.math.random(1,5)
@@ -46,17 +52,25 @@ function updateParticles(dt)
   physicsParticles(dt)
 end
 function physicsParticles(dt)
-  if #particles.parts > 1 then
+  if #particles.parts > 0 then
     for k,v in ipairs(particles.parts) do
       particles.x[k] = particles.x[k] + particles.xvel[k] * dt
       particles.y[k] = particles.y[k] + particles.yvel[k] * dt
       particles.yvel[k] = particles.yvel[k] + particles.gravity * dt
       particles.xvel[k] = particles.xvel[k] * (1-math.min(dt*particles.friction[k],1))
+      if particles.y[k] > love.graphics.getHeight()+50 then
+        table.remove(particles.parts,k)
+        table.remove(particles.y,k)
+        table.remove(particles.x,k)
+        table.remove(particles.xvel,k)
+        table.remove(particles.yvel,k)
+        table.remove(particles.friction,k)
+      end
     end
   end
 end
 function renderParticles(dt)
-  if #particles.parts > 1 then
+  if #particles.parts > 0 then
     for k,v in ipairs(particles.parts) do
       if k >= 1 and k <= 4 then
         love.graphics.draw(particles.parts[k],particles.x[k],particles.y[k],0,5,5)
