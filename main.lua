@@ -2,12 +2,20 @@ require "static_data/interfaces/player" --> Apparently interfaces cannot be outs
 require "static_data/interfaces/player2"
 require "static_data/interfaces/particles"
 require "static_data/interfaces/damagetext"
+local GJ = require "static_data/gamejolt"
 local utf8 = require("utf8")
 --> It doesn't work, still. Wtf
-version = "v0.1.5 ALPHA"
+version = "v0.1.6 STABLE"
 local prefixCMD = "stout"
+local totalxp = 0
+local xpRequired = 1^2
 local isGJCLIENT = false
 local isDemo = false
+local gjPing = 0
+local loggedIn = false
+function calculateLevel(xp)
+
+end
 function HSL(h, s, l, a)
 	if s<=0 then return l,l,l,a end
 	h, s, l = h/256*6, s/255, l/255
@@ -37,6 +45,7 @@ function clientReceive(data)
 
 end
 function love.load()
+	GJ.init(189671,"565ef6206be63effa1026ae6ff8207b6")
   resolution={
     love.graphics.getHeight(),love.graphics.getWidth()
   }
@@ -45,13 +54,9 @@ function love.load()
 	playerScale = 6
   changeLog = {
     "Changelog To the Death "..version..":",
-    "- Players no longer collide, since it only causes problems anyway.",
-    "  Collisions are calculated though, and are used for hit registration.",
-    "- Debug console! Press F5 to use it. There are *some* commands for it.",
-    "- Night mode: Press F4 to enable night mode. It helps a lot.",
-    "- Level re-added: City. Should work a tiny bit better this time",
-    "- You can now attack opponents. Player 1 can attack with left shift",
-    "  and Player 2 can attack with right shift.",
+		"GameJolt login is now supported! write 'gjlogin username&token' in the console to get started!",
+		"Trophies are on the way.",
+		"Data storage will be used in the future. Woot.",
     "Thank you for testing To the Death!",
 
   }
@@ -110,7 +115,7 @@ function love.load()
   end
   hue = 0
   hue2 = 130
-
+	gjLogin = true
 end
 function love.textinput(t)
     inputCMD = inputCMD..t
@@ -119,7 +124,7 @@ function cPrint(string,callerID)
   print(string)
   if not callerID then callerID = "main.lua" end
   if callerID == "WARNING" then spCMD = true end
-  returnString[#returnString+1] = "["..callerID.."]: "..string
+  returnString[#returnString+1] = "["..callerID.."]: "..tostring(string)
 end
 function love.focus(focus)
   focused = focus
@@ -154,6 +159,7 @@ function love.keypressed(k)
       "  tc - Toggles cheats for this session (Not available in MP)",
       "  connect <ip:port> - Connects to MP server (NYI)",
       "  startserver - Starts a MP server (WIP)",
+			"  gjlogin username&token (Do not remove &. It's an important part of the login string. Dunno why *shrug*)"
     }
     local cheatcmd = {
       "Cheats:",
@@ -211,6 +217,25 @@ function love.keypressed(k)
       end
 		elseif inputCMD == "togglecolliders" then
 			excollisions = not excollisions
+		elseif string.find(inputCMD,"gjlogin ",1) then
+			local tokenUsername = string.gsub(inputCMD,"gjlogin ","")
+			local tokenpos = string.find(tokenUsername,"&",1)
+			local creds = {
+				string.sub(tokenUsername,tokenpos+1),
+
+			}
+			creds[2] = string.gsub(tokenUsername,"&"..creds[1],"")
+			cPrint(tokenUsername.."|"..tokenpos.." "..creds[1].."+"..creds[2])
+			cPrint("Connecting to GameJolt.","GAMEJOLT")
+			local success = GJ.authUser(creds[2],creds[1])
+			if success then
+				GJ.openSession()
+				loggedIn = true
+				cPrint("Successfully logged in!","GAMEJOLT")
+			 else
+				 loggedIn = false
+				 cPrint("Invalid credentials.","GAMEJOLT")
+			 end
     elseif inputCMD == "tc" then
       cheats = not cheats
       if cheats == true then
@@ -328,6 +353,10 @@ function love.keypressed(k)
     end
     gameState = "main_menu"
   end
+	if k == "f1" and gameState == "main_menu" then
+	 gjLogin = not gjLogin
+	 cPrint(gjLogin,"GAMEJOLT")
+	end
   if k == "f5" and isDemo == false then
     inputCMD =""
     spCMD = not spCMD
@@ -347,15 +376,27 @@ function love.keypressed(k)
   end
 end
 function love.update(dt)
+	if love.event then
+		for e,a,b,c in love.event.poll() do
+			cPrint("e","event")
+		end
+	end
   local nOK = 0
   local nERR = 0
   pl1Cooldown = 10
   pl2Cooldown = 10
+	if gjPing > 30 and loggedIn == true then
+		gjPing = 0
+		local success = GJ.pingSession(true)
+		if success then cPrint("Successfully pinged session.","GAMEJOLT") else cPrint("Could not ping session!") end
+	end
+	gjPing = gjPing + 1 * dt
   if hue >= 255 then
     hue = 0
   else
     hue = hue + 150*dt
   end
+
   if hue2 >= 255 then
     hue2 = 0
   else
@@ -432,13 +473,17 @@ function love.draw()
 
 
   if gameState == "main_menu" then
+
     if menuTime > 8 then
       if nightMode == true then
         love.graphics.setColor(140,140,140,255)
       else
         love.graphics.setColor(255,255,255,255)
       end
-
+			if gjLogin == true then
+				love.graphics.setColor(255,255,255,255)
+				love.graphics.rectangle("fill", love.graphics.getWidth()*.25, love.graphics.getHeight()/(1.5/3), love.graphics.getWidth()/2, 30)
+			end
       love.graphics.draw(menuBG,1,1,0,1,1)
       love.graphics.setColor(0,0,0,255)
       love.graphics.draw(menuIcon,love.graphics.getWidth()/2, love.graphics.getHeight()/3,0,1,1,menuIcon:getWidth()/2, menuIcon:getHeight()/2)
