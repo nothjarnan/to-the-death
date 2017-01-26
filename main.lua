@@ -55,6 +55,7 @@ function love.load()
     "Thank you for testing To the Death!",
 
   }
+
   returnString = {
     "TTD "..version.." Debug Console. Enter 'help' for a list of commands",
   }

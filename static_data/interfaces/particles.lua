@@ -27,7 +27,7 @@ function explodePlayer(x,y,inP,dt)
     particles.y[k] = y
     particles.friction[k] = love.math.random(1,5)
   end
-  --local xvel = love.math.random(-300,300)
+  --local xvel = love.math.random(-800,800)
   --local yvel = love.math.random(-1300,500)
 
 end
