@@ -1,4 +1,4 @@
-require "static_data/interfaces/player" --> Apparently interfaces cannot be outside of root directories. What the hell?
+require "static_data/interfaces/player"
 require "static_data/interfaces/player2"
 require "static_data/interfaces/particles"
 require "static_data/interfaces/damagetext"
@@ -76,7 +76,10 @@ function love.load()
   inputCMD = ""
   spCMD = false
   gamefont = love.graphics.newFont(12)
+	gamejoltfont = love.graphics.newFont(18)
   love.graphics.setDefaultFilter("linear","nearest", 0)
+	loginbutton = love.graphics.newImage("static_data/textures/icons/gjloginbutton.png")
+	loginfailedicon = love.graphics.newImage("static_data/textures/icons/warning.png")
   knownstates = {
     "main_menu",
     "game",
@@ -99,6 +102,7 @@ function love.load()
   nothyLogo = love.graphics.newImage("static_data/textures/icons/nothy-logo-white.png")
   pressEnter = love.graphics.newImage("static_data/textures/icons/pressenter.png")
   menuBG = love.graphics.newImage("static_data/textures/icons/menubg.png")
+	gjLogo = love.graphics.newImage("static_data/textures/icons/Game-jolt-logo.png")
   gameState = "main_menu"
   menuTime = 0
   a=0
@@ -106,8 +110,14 @@ function love.load()
   showStats = false
   nightMode = false
   focused = true
+	inputlogin = ""
+	inputtoken = ""
+	loginfailed = false
+	tokencensored = string.rep("*",string.len(inputtoken))
+	switchinputs = false
   player.load()
   playertwo.load()
+	f=false
   if utf8 then cPrint("Has utf8 support") end
   cPrint(resolution[2].."x"..resolution[1])
   if resolution[1] < 1680 and resolution[2] < 1050 then
@@ -116,9 +126,24 @@ function love.load()
   hue = 0
   hue2 = 130
 	gjLogin = true
+	cursorblink = 0
+	cursorShow = true
 end
 function love.textinput(t)
-    inputCMD = inputCMD..t
+		if spCMD then
+    	inputCMD = inputCMD..t
+		end
+		if gjLogin then
+			--cPrint(inputtoken.." "..inputlogin)
+
+			if switchinputs then
+				inputtoken = inputtoken..t
+			else
+				inputlogin = inputlogin..t
+			end
+			tokencensored = string.rep("*",string.len(inputtoken))
+			--cPrint(inputtoken.." "..inputlogin)
+		end
 end
 function cPrint(string,callerID)
   print(string)
@@ -129,9 +154,67 @@ end
 function love.focus(focus)
   focused = focus
 end
+function love.mousepressed(x,y,button,istouch)
+	if gjLogin == true and x >= 550 and y >= 423 and x <= 743 and y <= 460 and button == 1 and string.len(inputlogin) > 1 and string.len(inputtoken) > 1 then
+		cPrint("Connecting to GameJolt.","GAMEJOLT")
+		local success = GJ.authUser(inputlogin,inputtoken)
+		if success then
+			GJ.openSession()
+			loggedIn = true
+			gjLogin = false
+			cPrint("Successfully logged in!","GAMEJOLT")
+		 else
+			 loggedIn = false
+			 loginfailed = true
+			 inputtoken = ""
+			 tokencensored = ""
+			 cPrint("Invalid credentials.","GAMEJOLT")
+		 end
+	end
+end
 function love.keypressed(k)
   --print(k)
+	if k == "f11" then
+		f = not f
+		love.window.setFullscreen(f)
+	end
   love.keyboard.setKeyRepeat(spCMD)
+	if gjLogin == true and k == "up" then
+		switchinputs = true
+	end
+	if gjLogin == true and k == "escape" then
+		gjLogin = false
+		inputlogin = ""
+		inputtoken = ""
+	end
+	if gjLogin == true and k == "down" then
+		switchinputs = false
+	end
+	if gjLogin == true then
+		love.keyboard.setKeyRepeat(true)
+		if k == "backspace" then
+		-- get the byte offset to the last UTF-8 character in the string.
+		local byteoffset = utf8.offset(inputlogin, -1)
+		local byteoffsetpw = utf8.offset(inputtoken, -1)
+		if switchinputs == true then
+			byteoffset = utf8.offset(inputtoken, -1)
+		else
+			byteoffset = utf8.offset(inputlogin, -1)
+		end
+
+		--cPrint(byteoffset)
+		if byteoffset then
+				-- remove the last UTF-8 character.
+				-- string.sub operates on bytes rather than UTF-8 characters, so we couldn't do string.sub(text, 1, -2).
+				if switchinputs == true then
+					inputtoken = string.sub(inputtoken , 1, byteoffset -1)
+				else
+					inputlogin = string.sub(inputlogin , 1, byteoffset - 1)
+				end
+				tokencensored = string.rep("*",string.len(inputtoken))
+		end
+	end
+	end
   if spCMD == true and isDemo == false then
 
     if k == "backspace" then
@@ -234,6 +317,7 @@ function love.keypressed(k)
 				cPrint("Successfully logged in!","GAMEJOLT")
 			 else
 				 loggedIn = false
+				 loginfailed = true
 				 cPrint("Invalid credentials.","GAMEJOLT")
 			 end
     elseif inputCMD == "tc" then
@@ -363,7 +447,10 @@ function love.keypressed(k)
     nightMode = spCMD
   end
   print(k,menuTime,spCMD)
-  if k == "return" and menuTime > 7.5 and spCMD == false then
+	if k == "return" and gjLogin == true then
+		switchinputs = not switchinputs
+	end
+  if k == "return" and menuTime > 7.5 and spCMD == false and gjLogin == false then
     if gameState == "main_menu" then
       level = love.math.random(1,2)
       cPrint("LEVEL:"..level)
@@ -396,7 +483,11 @@ function love.update(dt)
   else
     hue = hue + 150*dt
   end
-
+	if cursorblink == 0.5 then
+		cursorblink = 0
+		cursorShow = not cursorShow
+	end
+	cursorblink = cursorblink + 1 * dt
   if hue2 >= 255 then
     hue2 = 0
   else
@@ -480,11 +571,8 @@ function love.draw()
       else
         love.graphics.setColor(255,255,255,255)
       end
-			if gjLogin == true then
-				love.graphics.setColor(255,255,255,255)
-				love.graphics.rectangle("fill", love.graphics.getWidth()*.25, love.graphics.getHeight()/(1.5/3), love.graphics.getWidth()/2, 30)
-			end
-      love.graphics.draw(menuBG,1,1,0,1,1)
+
+      love.graphics.draw(menuBG,love.graphics.getWidth()/2,love.graphics.getHeight()/2,0,1,1,menuBG:getWidth()/2,menuBG:getHeight()/2)
       love.graphics.setColor(0,0,0,255)
       love.graphics.draw(menuIcon,love.graphics.getWidth()/2, love.graphics.getHeight()/3,0,1,1,menuIcon:getWidth()/2, menuIcon:getHeight()/2)
       love.graphics.setColor(0,0,0,a)
@@ -495,6 +583,39 @@ function love.draw()
           love.graphics.print(v,30,30+(16*k))
         end
       end
+			if gjLogin == true then
+				love.graphics.setColor(40,40,40,140)
+				love.graphics.rectangle("fill",1,1,love.graphics.getWidth(),love.graphics.getHeight())
+				love.graphics.setColor(40,40,40,190)
+				love.graphics.rectangle("fill",1,(love.graphics.getWidth()*.25)-(gjLogo:getHeight()*1.1),love.graphics.getWidth(),370)
+				love.graphics.setColor(255,255,255,255)
+				love.graphics.draw(gjLogo,love.graphics.getWidth()/2,love.graphics.getHeight()*(1.5/4),0,0.3,0.3,gjLogo:getWidth()/2,gjLogo:getHeight()/2)
+				if switchinputs == false then
+					love.graphics.setColor(204,255,0,255)
+					love.graphics.rectangle("fill", (love.graphics.getWidth()*.3)-5, love.graphics.getHeight()*(1.5/3)-45, (love.graphics.getWidth()/2.5)+10, 40)
+				else
+					love.graphics.setColor(204,255,0,255)
+					love.graphics.rectangle("fill", (love.graphics.getWidth()*.3)-5, love.graphics.getHeight()*(1.5/3)-5, (love.graphics.getWidth()/2.5)+10, 40)
+				end
+				love.graphics.setColor(255,255,255,255)
+				if loginfailed then
+					love.graphics.draw(loginfailedicon,love.graphics.getWidth()*.3,love.graphics.getHeight()*(1.5/3)-73,0,0.9,0.9)
+					love.graphics.setColor(255,20,20,255)
+					love.graphics.print("Login failed! Check your credentials and try again.",love.graphics.getWidth()*.3 + 35,love.graphics.getHeight()*(1.5/3)-64)
+					love.graphics.setColor(255,255,255,255)
+				end
+				love.graphics.rectangle("fill", love.graphics.getWidth()*.3, love.graphics.getHeight()*(1.5/3)-40, love.graphics.getWidth()/2.5, 30)
+				love.graphics.rectangle("fill", love.graphics.getWidth()*.3, love.graphics.getHeight()*(1.5/3), love.graphics.getWidth()/2.5, 30)
+				love.graphics.setFont(gamejoltfont)
+				love.graphics.setColor(0,0,0,255)
+				love.graphics.print(inputlogin,(love.graphics.getWidth()*.3)+5, (love.graphics.getHeight()*(1.5/3)-40)+5)
+				love.graphics.print(tokencensored,(love.graphics.getWidth()*.3)+5,(love.graphics.getHeight()*(1.5/3)+5))
+				love.graphics.setFont(gamefont)
+				if string.len(inputlogin) > 1 and string.len(inputtoken) > 1 then
+					love.graphics.setColor(255,255,255,255)
+					love.graphics.draw(loginbutton,550,423)
+				end
+			end
     else
       love.graphics.setColor(255,255,255,a)
       love.graphics.draw(nothyLogo,(love.graphics.getWidth()/2)+10, love.graphics.getHeight()/2,0,0.6,0.6,nothyLogo:getWidth()/2, nothyLogo:getHeight()/2)
