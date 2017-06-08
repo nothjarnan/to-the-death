@@ -177,6 +177,8 @@ function love.keypressed(k)
 	if k == "f11" then
 		f = not f
 		love.window.setFullscreen(f)
+		groundLevel = love.graphics.getHeight()-325
+		groundLeveltwo = love.graphics.getHeight()-325
 	end
   love.keyboard.setKeyRepeat(spCMD)
 	if gjLogin == true and k == "up" then

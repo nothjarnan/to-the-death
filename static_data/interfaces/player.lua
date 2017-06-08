@@ -6,7 +6,7 @@ opponent = {
   x = 0,
   y = 0
 }
-groundLevel = 463
+groundLevel = love.graphics.getHeight()-325
 gravity = (35*100)
 scaleFactor = 6
 timer = 1

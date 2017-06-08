@@ -5,7 +5,7 @@ opponentt={
   x = 0,
   y = 0
 }
-groundLeveltwo = 463
+groundLeveltwo = love.graphics.getHeight()-325
 gravitytwo = (35*100)
 scaleFactortwo = 6
 timertwo = 2
