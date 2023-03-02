@@ -28,7 +28,7 @@ function HSL(h, s, l, a)
 	elseif h < 4 then r,g,b = 0,x,c
 	elseif h < 5 then r,g,b = x,0,c
 	else              r,g,b = c,0,x
-	end return (r+m)*255,(g+m)*255,(b+m)*255,a
+	end return (r+m),(g+m),(b+m),a
 end
 
 function onConnect(ip,port)
@@ -377,11 +377,11 @@ function love.keypressed(k)
     elseif string.find(inputCMD,"kill ",1) and cheats == true then
       local ply = string.gsub(inputCMD,"kill ","")
       if ply == "1" then
-        player.health = -99.9*10^5
+        player.health = -1
         returnString[#returnString+1] = "["..prefixCMD.."]: Player1 is now dead."
       end
       if ply == "2" then
-        playertwo.health = -99.9*10^5
+        playertwo.health = -1
         returnString[#returnString+1] = "["..prefixCMD.."]: Player2 is now dead"
       end
     elseif string.find(inputCMD,"healthp",1) and cheats == true then
@@ -569,91 +569,91 @@ function love.draw()
 
     if menuTime > 8 then
       if nightMode == true then
-        love.graphics.setColor(140,140,140,255)
+        love.graphics.setColor(140/255,140/255,140/255,1)
       else
-        love.graphics.setColor(255,255,255,255)
+        love.graphics.setColor(1,1,1,1)
       end
 
       love.graphics.draw(menuBG,love.graphics.getWidth()/2,love.graphics.getHeight()/2,0,1,1,menuBG:getWidth()/2,menuBG:getHeight()/2)
-      love.graphics.setColor(0,0,0,255)
+      love.graphics.setColor(0,0,0,1)
       love.graphics.draw(menuIcon,love.graphics.getWidth()/2, love.graphics.getHeight()/3,0,1,1,menuIcon:getWidth()/2, menuIcon:getHeight()/2)
       love.graphics.setColor(0,0,0,a)
       love.graphics.draw(pressEnter,love.graphics.getWidth()/2, love.graphics.getHeight()/1.5,0,0.5,0.5,pressEnter:getWidth()/2, pressEnter:getHeight()/2)
       if #changeLog > 1 then
         for k,v in ipairs(changeLog) do
-          love.graphics.setColor(0,0,0,255)
+          love.graphics.setColor(0,0,0,1)
           love.graphics.print(v,30,30+(16*k))
         end
       end
 			if gjLogin == true then
-				love.graphics.setColor(40,40,40,140)
+				love.graphics.setColor(40/255,40/255,40/255,140/255)
 				love.graphics.rectangle("fill",1,1,love.graphics.getWidth(),love.graphics.getHeight())
-				love.graphics.setColor(40,40,40,190)
+				love.graphics.setColor(40/255,40/255,40/255,190/255)
 				love.graphics.rectangle("fill",1,(love.graphics.getWidth()*.25)-(gjLogo:getHeight()*1.1),love.graphics.getWidth(),370)
-				love.graphics.setColor(255,255,255,255)
+				love.graphics.setColor(1,1,1,1)
 				love.graphics.draw(gjLogo,love.graphics.getWidth()/2,love.graphics.getHeight()*(1.5/4),0,0.3,0.3,gjLogo:getWidth()/2,gjLogo:getHeight()/2)
 				if switchinputs == false then
-					love.graphics.setColor(204,255,0,255)
+					love.graphics.setColor(204/255,1,0,1)
 					love.graphics.rectangle("fill", (love.graphics.getWidth()*.3)-5, love.graphics.getHeight()*(1.5/3)-45, (love.graphics.getWidth()/2.5)+10, 40)
 				else
-					love.graphics.setColor(204,255,0,255)
+					love.graphics.setColor(204/255,1,0,1)
 					love.graphics.rectangle("fill", (love.graphics.getWidth()*.3)-5, love.graphics.getHeight()*(1.5/3)-5, (love.graphics.getWidth()/2.5)+10, 40)
 				end
-				love.graphics.setColor(255,255,255,255)
+				love.graphics.setColor(1,1,1,1)
 				if loginfailed then
 					love.graphics.draw(loginfailedicon,love.graphics.getWidth()*.3,love.graphics.getHeight()*(1.5/3)-73,0,0.9,0.9)
-					love.graphics.setColor(255,20,20,255)
+					love.graphics.setColor(1,20/255,20/255,1)
 					love.graphics.print("Login failed! Check your credentials and try again.",love.graphics.getWidth()*.3 + 35,love.graphics.getHeight()*(1.5/3)-64)
-					love.graphics.setColor(255,255,255,255)
+					love.graphics.setColor(1,1,1,1)
 				end
 				love.graphics.rectangle("fill", love.graphics.getWidth()*.3, love.graphics.getHeight()*(1.5/3)-40, love.graphics.getWidth()/2.5, 30)
 				love.graphics.rectangle("fill", love.graphics.getWidth()*.3, love.graphics.getHeight()*(1.5/3), love.graphics.getWidth()/2.5, 30)
 				love.graphics.setFont(gamejoltfont)
-				love.graphics.setColor(0,0,0,255)
+				love.graphics.setColor(0,0,0,1)
 				love.graphics.print(inputlogin,(love.graphics.getWidth()*.3)+5, (love.graphics.getHeight()*(1.5/3)-40)+5)
 				love.graphics.print(tokencensored,(love.graphics.getWidth()*.3)+5,(love.graphics.getHeight()*(1.5/3)+5))
 				love.graphics.setFont(gamefont)
 				if string.len(inputlogin) > 1 and string.len(inputtoken) > 1 then
-					love.graphics.setColor(255,255,255,255)
+					love.graphics.setColor(1,1,1,1)
 					love.graphics.draw(loginbutton,550,423)
 				end
 			end
     else
-      love.graphics.setColor(255,255,255,a)
+      love.graphics.setColor(1,1,1,a)
       love.graphics.draw(nothyLogo,(love.graphics.getWidth()/2)+10, love.graphics.getHeight()/2,0,0.6,0.6,nothyLogo:getWidth()/2, nothyLogo:getHeight()/2)
     end
   else
 
     love.graphics.setBackgroundColor(0,0,0)
     if nightMode == true then
-      love.graphics.setColor(140,140,140,255)
+      love.graphics.setColor(140/255,140/255,140/255,1)
     else
-      love.graphics.setColor(255,255,255,255)
+      love.graphics.setColor(1,1,1,1)
     end
 
     love.graphics.draw(levelbackgrounds[level],love.graphics.getWidth()/2,love.graphics.getHeight()/2,0,4.8,4.8,levelbackgrounds[level]:getWidth()/2,levelbackgrounds[level]:getHeight()/2)
 
     if showStats == true then
-      love.graphics.setColor(255,0,0,255)
+      love.graphics.setColor(255/255,0,0,255/255)
       --love.graphics.rectangle("line",player.x-25,player.y,50,player.currentTexture:getHeight()*5)
       --love.graphics.rectangle("line",playertwo.x-25,playertwo.y,50,playertwo.currentTexture:getHeight()*5)
       if nightMode == true then
-        love.graphics.setColor(140,140,140,255)
+        love.graphics.setColor(140/255,140/255,140/255,255)
       else
-        love.graphics.setColor(255,255,255,255)
+        love.graphics.setColor(1,1,1,1)
       end
     end
     if gameState == "player_2_wins" then
       --print("PLAYER 2 WINS")
       love.graphics.setColor(HSL(hue,255,200))
       love.graphics.draw(winScreens[2],love.graphics.getWidth()/2-winScreens[2]:getWidth()/2,love.graphics.getHeight()*0.33)
-      love.graphics.setColor(255, 255, 255, 255)
+      love.graphics.setColor(1,1,1,1)
     end
     if gameState == "player_1_wins" then
       --print("PLAYER 1 WINS")
       love.graphics.setColor(HSL(hue,255,200))
       love.graphics.draw(winScreens[1],love.graphics.getWidth()/2-winScreens[1]:getWidth()/2,love.graphics.getHeight()*0.33)
-      love.graphics.setColor(255, 255, 255, 255)
+      love.graphics.setColor(1, 1, 1, 1)
     end
     player.draw()
     renderParticles()
@@ -661,26 +661,26 @@ function love.draw()
     playertwo.draw()
   end
   if showStats == true then
-    love.graphics.setColor(97,224,105,255)
+    love.graphics.setColor(97/255,224/255,105/255,255/255)
     love.graphics.print("GRAPHICS STATS: \n DRAW_CALLS: "..stats.drawcalls.." \n CANVAS_SWITCHES: "..stats.canvasswitches.."\n GRAPHICS_MEMORY: "..(stats.texturememory/1024/1024).."MB \n FPS: "..love.timer.getFPS().."\n PLAYER1XY: "..player.x..";"..player.y.."\n PLAYER2XY: "..playertwo.x..";"..playertwo.y.."\n PLAYER1COLL: "..tostring(player.collided).."\n PLAYER2COLL: "..tostring(playertwo.collided).."\n T: "..timer.."\n T2: "..timertwo.."\n hue:"..hue.."\n len particles:"..#particles.."\n playerScale:"..playerScale.."\n p1sf: "..scaleFactor.."\n p2sf"..scaleFactortwo,1,1)
   end
   if spCMD == true then
-    love.graphics.setColor(20,20,20,90)
+    love.graphics.setColor(20/255,20/255,20/255,90/255)
     love.graphics.rectangle("fill",1,love.graphics.getHeight()-28-(16*#returnString),love.graphics.getWidth(),love.graphics.getHeight()-28)
 
 
-    love.graphics.setColor(97,224,105,255)
+    love.graphics.setColor(97/255,224/255,105/255,255/255)
 
     for k,v in ipairs(returnString) do
       love.graphics.print(returnString[k],1,love.graphics.getHeight()-42+(16*k)-(16*#returnString))
     end
-    love.graphics.setColor(50,50,50,255)
+    love.graphics.setColor(50/255,50/255,50/255,1)
     love.graphics.line(1,love.graphics.getHeight()-29,love.graphics.getWidth(),love.graphics.getHeight()-29)
-    love.graphics.setColor(0,255,0,255)
+    love.graphics.setColor(0,1,0,1)
     love.graphics.print("> "..inputCMD,1,love.graphics.getHeight()-21)
-    love.graphics.setColor(255,255,255,255)
+    love.graphics.setColor(1,1,1,1)
   end
-  love.graphics.setColor(255,255,255,255)
+  love.graphics.setColor(1,1,1,1)
 	if isDemo then
   	love.graphics.print("To the Death Demo",5,5)
 	end
